@@ -1,0 +1,400 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaa28df13cc6e80468a718b834f154d6, type: 3}
+  m_Name: SoundLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::Chopper.SoundLibrary
+  sounds:
+  - id: 10
+    clip: {fileID: 8300000, guid: c1aac22d907f81340847c5942fe0476b, type: 3}
+    volume: 0.9
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0.06
+    loopEndTrim: 0.18
+    loopCrossfade: 0.05
+  - id: 11
+    clip: {fileID: 8300000, guid: c416d13eb3540854b9acc27b06df6623, type: 3}
+    volume: 0.75
+    pitchRange: {x: 0.96, y: 1.04}
+    maxVoices: 3
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.045
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 12
+    clip: {fileID: 8300000, guid: 2b56bfe8be5f38d40a29223e7f268c76, type: 3}
+    volume: 1
+    pitchRange: {x: 0.96, y: 1.04}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 20
+    clip: {fileID: 8300000, guid: f15b03397146d3641b203315823d900c, type: 3}
+    volume: 0.2
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 21
+    clip: {fileID: 8300000, guid: 5e82c17556b715e4694954116c617c3c, type: 3}
+    volume: 0.6
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0.05
+    loopEndTrim: 0.01
+    loopCrossfade: 0.3
+  - id: 22
+    clip: {fileID: 8300000, guid: c628aec91e16e12488753d6888e85ec6, type: 3}
+    volume: 0.5
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 30
+    clip: {fileID: 8300000, guid: 26fd1f04cb5b6f843ac944c9f688dc91, type: 3}
+    volume: 0.16
+    pitchRange: {x: 0.96, y: 1.04}
+    maxVoices: 4
+    overflow: 1
+    minInterval: 0.03
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 31
+    clip: {fileID: 8300000, guid: 195bd5be96482bc4aa5c727673ccbf83, type: 3}
+    volume: 0.2
+    pitchRange: {x: 0.96, y: 1.04}
+    maxVoices: 4
+    overflow: 1
+    minInterval: 0.03
+    startOffset: 0.045
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 32
+    clip: {fileID: 8300000, guid: ce19e3e3242591541bbca026a8277cc6, type: 3}
+    volume: 0.2
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 3
+    overflow: 1
+    minInterval: 0.03
+    startOffset: 0.07
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 33
+    clip: {fileID: 8300000, guid: d435abea5563afc45b282b3437842575, type: 3}
+    volume: 0.16
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0.046
+    loopEndTrim: 0.008
+    loopCrossfade: 0.12
+  - id: 34
+    clip: {fileID: 8300000, guid: 8877eac71bb312343b1840e44d39ab9d, type: 3}
+    volume: 0.9
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.08
+    startOffset: 0.025
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 35
+    clip: {fileID: 8300000, guid: 906cc45832e9a034dac38c074a11f34c, type: 3}
+    volume: 0.42
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.04
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 36
+    clip: {fileID: 8300000, guid: bcaae2ecf88d5f149915e43eb7148444, type: 3}
+    volume: 0.3
+    pitchRange: {x: 0.9, y: 1.1}
+    maxVoices: 2
+    overflow: 0
+    minInterval: 0.07
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 37
+    clip: {fileID: 8300000, guid: 3ab24a6351d36084c82f9bd0ac448ca1, type: 3}
+    volume: 0.35
+    pitchRange: {x: 0.92, y: 1.08}
+    maxVoices: 3
+    overflow: 1
+    minInterval: 0.035
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 38
+    clip: {fileID: 8300000, guid: 623d14d3590a1384488e6c909d32a356, type: 3}
+    volume: 0.57
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.05
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 39
+    clip: {fileID: 8300000, guid: fc80729ea8ba697409c3d7c54677a610, type: 3}
+    volume: 0.9
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.045
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 40
+    clip: {fileID: 8300000, guid: b629b44edac0ecb4996b06fc611284f6, type: 3}
+    volume: 0.7
+    pitchRange: {x: 0.85, y: 1.15}
+    maxVoices: 4
+    overflow: 1
+    minInterval: 0.04
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 41
+    clip: {fileID: 8300000, guid: 9f62bc6f33db761408bbabf12b375181, type: 3}
+    volume: 0.7
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 42
+    clip: {fileID: 8300000, guid: 7151dfff120527544986dfa2f007359e, type: 3}
+    volume: 0.85
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 43
+    clip: {fileID: 8300000, guid: 27086dde0c780a84dafde4c3990bff22, type: 3}
+    volume: 0.8
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 50
+    clip: {fileID: 8300000, guid: cf16031886c2cd047a4ec76bea5ff9d6, type: 3}
+    volume: 0.85
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.075
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 51
+    clip: {fileID: 8300000, guid: 1eac0ff3010adef41a3e8c0b7b61e0f5, type: 3}
+    volume: 0.7
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.05
+    startOffset: 0.015
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 52
+    clip: {fileID: 8300000, guid: 990b06f7a91e48f40baebc2cbc2bf4b5, type: 3}
+    volume: 0.45
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.05
+    startOffset: 0.045
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 53
+    clip: {fileID: 8300000, guid: f1a92fad11502924d987eb260872eb26, type: 3}
+    volume: 0.3
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.05
+    startOffset: 0.025
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 54
+    clip: {fileID: 8300000, guid: 26bd681db4ab1744c91dfb8e41f8e370, type: 3}
+    volume: 0.95
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.05
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 55
+    clip: {fileID: 8300000, guid: dc3d984e61f2b4e40b24fdd3d355ff45, type: 3}
+    volume: 0.75
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 2
+    overflow: 1
+    minInterval: 0.05
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 60
+    clip: {fileID: 8300000, guid: 7a445bc4ec79bb14dbbea8e6460392d6, type: 3}
+    volume: 1
+    pitchRange: {x: 0.9, y: 1.1}
+    maxVoices: 4
+    overflow: 1
+    minInterval: 0.04
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 70
+    clip: {fileID: 8300000, guid: 35f7e54fa505cea4aa2b592b2240fe13, type: 3}
+    volume: 0.38
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.05
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 71
+    clip: {fileID: 8300000, guid: 33206361351a3a14a850192038fbb45b, type: 3}
+    volume: 0.28
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0.045
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 72
+    clip: {fileID: 8300000, guid: 6412d78ad3914ed458ee938ae5159392, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0.051
+    loopEndTrim: 0.044
+    loopCrossfade: 0.15
+  - id: 73
+    clip: {fileID: 8300000, guid: 71ecb1598ab16ca458c7c2ac9c8b8b9a, type: 3}
+    volume: 0.15
+    pitchRange: {x: 0.95, y: 1.05}
+    maxVoices: 4
+    overflow: 1
+    minInterval: 0.045
+    startOffset: 0.035
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 74
+    clip: {fileID: 8300000, guid: 4ce4a327931f8384d9feee5571678c56, type: 3}
+    volume: 0.2
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 0
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0.1
+    loopEndTrim: 0.009
+    loopCrossfade: 0.25
+  - id: 75
+    clip: {fileID: 8300000, guid: 2373a5d7c8ed7004fbe376ab63a684d1, type: 3}
+    volume: 0.9
+    pitchRange: {x: 1, y: 1}
+    maxVoices: 1
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 76
+    clip: {fileID: 8300000, guid: d49447412d0963d4d86b288285156a0a, type: 3}
+    volume: 0.58
+    pitchRange: {x: 0.94, y: 1.06}
+    maxVoices: 3
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
+  - id: 77
+    clip: {fileID: 8300000, guid: 06c644796a2861847945f3e7e8193f99, type: 3}
+    volume: 0.95
+    pitchRange: {x: 0.94, y: 1.06}
+    maxVoices: 3
+    overflow: 1
+    minInterval: 0
+    startOffset: 0
+    loopStartTrim: 0
+    loopEndTrim: 0
+    loopCrossfade: 0
