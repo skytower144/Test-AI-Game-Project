@@ -13,12 +13,10 @@ namespace Chopper
         [SerializeField] private Sprite[] sprites = System.Array.Empty<Sprite>();
 
         [Header("Randomization")]
-        [Tooltip("이동 속도 범위(유닛/초)")]
-        [SerializeField] private Vector2 speedRange = new Vector2(0.35f, 1.4f);
+        [Tooltip("이동 속도 범위(유닛/초). 잔해마다 이 범위에서 랜덤하게 정해진다")]
+        [SerializeField] private Vector2 speedRange = new Vector2(0.35f, 2.1f);
         [Tooltip("크기 배율 범위. 빠른 잔해일수록 크게(가깝게) 보인다")]
         [SerializeField] private Vector2 scaleRange = new Vector2(1.2f, 2.6f);
-        [Tooltip("회전 속도 범위(도/초)")]
-        [SerializeField] private Vector2 spinRange = new Vector2(-10f, 10f);
         [Tooltip("생성 간격 범위(초)")]
         [SerializeField] private Vector2 spawnIntervalRange = new Vector2(1.5f, 3.5f);
         [Tooltip("생성 높이 범위(뷰포트 Y). 배경은 화면 위쪽 절반")]
@@ -35,7 +33,28 @@ namespace Chopper
         private int[] bag;
         private int bagIndex;
 
+        private void OnEnable()
+        {
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
+        }
+
         private void Start()
+        {
+            Populate();
+        }
+
+        // RETRY: 기존 잔해는 풀로 반납된 상태이므로 처음처럼 다시 배치한다
+        private void OnGameReset(GameResetEvent evt)
+        {
+            Populate();
+        }
+
+        private void Populate()
         {
             for (int i = 0; i < initialCount; i++)
                 Spawn(Random.Range(ScreenBounds.Left, ScreenBounds.Right));
@@ -65,11 +84,12 @@ namespace Chopper
             float scale = Mathf.Lerp(scaleRange.x, scaleRange.y, depth) * Random.Range(0.9f, 1.1f);
             float y = ScreenBounds.FromViewport(0f, Random.Range(viewportYRange.x, viewportYRange.y)).y;
 
-            DriftingDebris debris = PoolManager.Spawn(debrisPrefab, Vector3.zero, Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)));
+            // 회전은 적용하지 않는다(원본 스프라이트 방향 그대로)
+            DriftingDebris debris = PoolManager.Spawn(debrisPrefab, Vector3.zero, Quaternion.identity);
             if (debris == null) return;
 
-            debris.Setup(sprite, scale, speed, Random.Range(spinRange.x, spinRange.y),
-                Color.Lerp(farColor, nearColor, depth), Random.value < 0.5f, baseSortingOrder + Mathf.RoundToInt(depth * 10f));
+            debris.Setup(sprite, scale, speed, Color.Lerp(farColor, nearColor, depth), Random.value < 0.5f,
+                baseSortingOrder + Mathf.RoundToInt(depth * 10f));
 
             if (float.IsNaN(x)) x = ScreenBounds.Right + debris.HalfWidth;
             debris.transform.position = new Vector3(x, y, 0f);

@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 1}
+  m_LocalScale: {x: 2.4, y: 2.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -224,9 +224,9 @@ MonoBehaviour:
   flashOnHit: 0
   hitFlashMaterial: {fileID: 2100000, guid: bf67be1da2cf8b441aeaa03cadfa6d76, type: 2}
   hitFlashInterval: 0.05
-  deathEffectScale: 2.6
+  deathEffectScale: 2.08
   despawnMargin: 0.6
-  speedRange: {x: 1.3, y: 2.3}
+  speedRange: {x: 1.95, y: 3.45}
   amplitudeRange: {x: 0.25, y: 0.85}
   frequencyRange: {x: 1.6, y: 3.6}
   verticalPadding: 0.25

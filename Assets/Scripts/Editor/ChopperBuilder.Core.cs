@@ -60,6 +60,13 @@ namespace Chopper.EditorTools
         private const string Ship6Tex = Ship6Dir + "Ship6.png";
         private const string ExhaustFormat = Ship6Dir + "Exhaust/Turbo_flight/Exhaust{0}/exhaust{1}.png";
 
+        /// <summary>보스 처치 시 튀어 오르는 잔해로 쓰는 Ship6 파츠 이미지.</summary>
+        private static readonly string[] Ship6DebrisParts =
+        {
+            "ship6_deail1.png", "ship6_detail2.png", "ship6_detail3.png", "ship6_detail4.png", "ship6_detail5.png",
+            "ship6_wing_detail1.png", "ship6_wing_detail2.png", "ship6_body2.png", "ship6_body3.png",
+        };
+
         private const string DomePrefabPath = SkyDomeDir + "Prefabs_SkyDomes/DomePrefab_Toon.prefab";
         private const string SkyTexturePath = SkyDomeDir + "SkiesTextures_SkyDomes/Toon/SkyToon_17.png";
         private const string FogMaterialPath = Imported + "FogAsset/FogMAT.mat";
@@ -170,9 +177,13 @@ namespace Chopper.EditorTools
             CropSpriteCells(HornetTex, 24, 24, 6);
             CropSpriteCells(WaspTex, 16, 16, 4);
 
-            // 달 표면 레이어: Tiled 드로우 모드용 Full Rect 메시
-            for (int i = 1; i <= 4; i++)
+            // 달 표면 레이어(1~3 사용): Tiled 드로우 모드용 Full Rect 메시
+            for (int i = 1; i <= 3; i++)
                 SetSpriteMeshType(string.Format(MoonLayerFormat, i), SpriteMeshType.FullRect);
+
+            // Ship6 파츠 이미지는 일반 텍스처로 임포트되어 있으므로 픽셀 아트 스프라이트로 바꾼다(보스 잔해용)
+            foreach (string part in Ship6DebrisParts)
+                ImportAsPixelSprite(Ship6Dir + "Parts/" + part);
 
             // 고해상도(4096²) 피격 이펙트는 화면에 작게 표시되므로 부드러운 필터 + 밉맵을 쓰고,
             // 메모리를 아끼기 위해 임포트 해상도를 2048로 제한한다.
@@ -193,6 +204,27 @@ namespace Chopper.EditorTools
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null) throw new FileNotFoundException("Texture not found: " + path);
             if (configure(importer)) importer.SaveAndReimport();
+        }
+
+        /// <summary>픽셀 아트 이미지를 단일 스프라이트(Point 필터, 무압축)로 임포트한다. 이미 설정되어 있으면 건너뛴다.</summary>
+        private static void ImportAsPixelSprite(string path)
+        {
+            ConfigureTexture(path, importer =>
+            {
+                bool changed = false;
+                if (importer.textureType != TextureImporterType.Sprite) { importer.textureType = TextureImporterType.Sprite; changed = true; }
+                if (importer.spriteImportMode != SpriteImportMode.Single) { importer.spriteImportMode = SpriteImportMode.Single; changed = true; }
+                if (!Mathf.Approximately(importer.spritePixelsPerUnit, 100f)) { importer.spritePixelsPerUnit = 100f; changed = true; }
+                if (importer.filterMode != FilterMode.Point) { importer.filterMode = FilterMode.Point; changed = true; }
+                if (importer.mipmapEnabled) { importer.mipmapEnabled = false; changed = true; }
+                if (!importer.alphaIsTransparency) { importer.alphaIsTransparency = true; changed = true; }
+                if (importer.textureCompression != TextureImporterCompression.Uncompressed)
+                {
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    changed = true;
+                }
+                return changed;
+            });
         }
 
         private static void SetSpriteMeshType(string path, SpriteMeshType meshType)

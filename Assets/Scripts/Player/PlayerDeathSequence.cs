@@ -29,7 +29,7 @@ namespace Chopper
         [Header("2) Small Explosions")]
         [SerializeField, Min(0f)] private float smallExplosionDuration = 1f;
         [Tooltip("소규모 폭발 생성 간격 범위(초)")]
-        [SerializeField] private Vector2 smallExplosionInterval = new Vector2(0.07f, 0.2f);
+        [SerializeField] private Vector2 smallExplosionInterval = new Vector2(0.035f, 0.1f);
         [Tooltip("소규모 폭발이 생성되는 영역(중심 기준 반크기)")]
         [SerializeField] private Vector2 smallExplosionArea = new Vector2(0.45f, 0.22f);
         [SerializeField] private Vector2 smallExplosionScale = new Vector2(0.9f, 1.6f);
@@ -176,15 +176,18 @@ namespace Chopper
 
         private void SpawnWreckage(Vector2 center)
         {
+            // 두 파츠는 기울어진 헬리콥터 이미지와 같은 각도에서 분리되기 시작한다
+            Quaternion tilt = visual != null ? visual.rotation : Quaternion.identity;
+
             if (cabinPrefab != null)
             {
-                WreckPiece cabin = PoolManager.Spawn(cabinPrefab, center + cabinOffset, Quaternion.identity);
+                WreckPiece cabin = PoolManager.Spawn(cabinPrefab, center + cabinOffset, tilt);
                 if (cabin != null) cabin.Launch(cabinVelocity, cabinSpin);
             }
 
             if (tailPrefab != null)
             {
-                WreckPiece tail = PoolManager.Spawn(tailPrefab, center + tailOffset, Quaternion.identity);
+                WreckPiece tail = PoolManager.Spawn(tailPrefab, center + tailOffset, tilt);
                 if (tail != null) tail.Launch(tailVelocity, tailSpin);
             }
 

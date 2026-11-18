@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Chopper
 {
-    /// <summary>씬 전환 사이에 유지되는 세션 데이터(유저네임, RETRY 여부).</summary>
+    /// <summary>씬 전환 사이에 유지되는 세션 데이터(유저네임).</summary>
     public static class GameSession
     {
         public const string TitleSceneName = "Title";
@@ -16,9 +16,6 @@ namespace Chopper
             get => string.IsNullOrEmpty(s_PlayerName) ? DefaultPlayerName : s_PlayerName;
             set => s_PlayerName = value;
         }
-
-        /// <summary>결과 화면의 RETRY로 인게임에 재진입했는지 여부.</summary>
-        public static bool IsRetry { get; set; }
 
         /// <summary>
         /// VSync가 꺼져 있을 때 프레임률이 무제한으로 치솟지 않도록 제한한다.
@@ -34,12 +31,6 @@ namespace Chopper
 
             int refresh = Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value);
             Application.targetFrameRate = target > 0 ? target : Mathf.Max(60, refresh);
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOnPlay()
-        {
-            IsRetry = false;
         }
     }
 }

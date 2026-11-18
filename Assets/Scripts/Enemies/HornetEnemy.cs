@@ -3,13 +3,13 @@ using UnityEngine;
 namespace Chopper
 {
     /// <summary>
-    /// Hornet: 화면을 1~1.5초 만에 가로지르며 45°, 0°, -45° 방향으로 총알 3발을 발사한다.
+    /// Hornet: 화면을 빠르게 가로지르며 45°, 0°, -45° 방향으로 총알 3발을 발사한다.
     /// </summary>
     public sealed class HornetEnemy : Enemy
     {
         [Header("Hornet Movement")]
-        [Tooltip("화면 오른쪽 끝에서 왼쪽 끝까지 이동하는 데 걸리는 시간 범위(초)")]
-        [SerializeField] private Vector2 crossTimeRange = new Vector2(1f, 1.5f);
+        [Tooltip("화면 오른쪽 끝에서 왼쪽 끝까지 이동하는 데 걸리는 시간 범위(초). 값이 클수록 느리다")]
+        [SerializeField] private Vector2 crossTimeRange = new Vector2(1.11f, 1.67f);
 
         [Header("Hornet Attack")]
         [SerializeField] private Bullet bulletPrefab;

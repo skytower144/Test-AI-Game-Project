@@ -9,8 +9,15 @@ namespace Chopper
 
     // ───────────── 게임 흐름 ─────────────
 
-    /// <summary>인게임 시작(씬 로드 직후). RETRY로 진입했는지 여부 포함.</summary>
+    /// <summary>인게임 시작(씬 로드 직후 또는 RETRY 직후). RETRY로 시작했는지 여부 포함.</summary>
     public struct GameStartedEvent : IGameEvent { public bool isRetry; }
+
+    /// <summary>
+    /// RETRY: 씬을 다시 로드하지 않고 인게임을 처음 상태로 되돌리는 순간.
+    /// 풀링된 오브젝트는 이미 모두 반납된 상태이며, 각 시스템은 이 이벤트를 받아 자신의 상태를 초기화한다.
+    /// 직후에 GameStartedEvent(isRetry = true)가 발행된다.
+    /// </summary>
+    public struct GameResetEvent : IGameEvent { }
 
     public struct ScoreChangedEvent : IGameEvent { public int score; public int delta; }
 

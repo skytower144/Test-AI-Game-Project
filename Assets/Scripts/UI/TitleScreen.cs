@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -20,7 +19,6 @@ namespace Chopper
         [Tooltip("입력값이 비어 있을 때 보이는 'INSERT NAME'")]
         [SerializeField] private TMP_Text placeholderText;
         [SerializeField] private RectTransform caret;
-        [SerializeField] private Graphic fadeOverlay;
 
         [Header("Input")]
         [SerializeField, Range(1, 16)] private int maxNameLength = 10;
@@ -29,13 +27,15 @@ namespace Chopper
         [SerializeField, Min(0.01f)] private float eraseRepeatInterval = 0.06f;
 
         [Header("Visual")]
-        [SerializeField, Range(0f, 1f)] private float placeholderAlpha = 0.3f;
+        [Tooltip("'INSERT NAME'의 불투명도. 입력창 안에서 희미하게 보일 정도로 어둡게")]
+        [SerializeField, Range(0f, 1f)] private float placeholderAlpha = 0.13f;
+        [Tooltip("이름 없이 Enter를 눌렀을 때 'INSERT NAME'이 잠깐 깜박이는 밝기")]
+        [SerializeField, Range(0f, 1f)] private float placeholderWarnAlpha = 0.6f;
         [SerializeField, Min(0.05f)] private float caretBlinkInterval = 0.4f;
         [Tooltip("이름 끝과 캐럿 사이 간격(px)")]
         [SerializeField] private float caretSpacing = 8f;
 
-        [Header("Transition")]
-        [SerializeField, Min(0f)] private float fadeOutDuration = 0.5f;
+        [Header("Audio")]
         [SerializeField, Min(0f)] private float musicFadeIn = 0.6f;
 
         private static readonly Key[] LetterKeys =
@@ -70,7 +70,6 @@ namespace Chopper
             if (caret != null) caretGraphic = caret.GetComponent<Graphic>();
             buffer.Clear();
             Refresh();
-            SetOverlayAlpha(0f);
             AudioManager.PlayLoop(SoundId.TitleMusic, musicFadeIn);
         }
 
@@ -88,7 +87,7 @@ namespace Chopper
                 {
                     if (buffer.Length > 0)
                     {
-                        StartCoroutine(StartGameRoutine());
+                        StartGame();
                         return;
                     }
                     placeholderWarnTimer = 0.6f; // 이름이 비어 있으면 플레이스홀더를 잠깐 강조
@@ -207,7 +206,7 @@ namespace Chopper
                 {
                     placeholderWarnTimer -= dt;
                     // 빠르게 깜박여 입력이 필요함을 알린다
-                    alpha = Mathf.Repeat(placeholderWarnTimer, 0.2f) < 0.1f ? 1f : placeholderAlpha;
+                    alpha = Mathf.Repeat(placeholderWarnTimer, 0.2f) < 0.1f ? placeholderWarnAlpha : placeholderAlpha;
                 }
                 Color color = placeholderText.color;
                 if (!Mathf.Approximately(color.a, alpha))
@@ -218,34 +217,14 @@ namespace Chopper
             }
         }
 
-        private IEnumerator StartGameRoutine()
+        // 화면 페이드 없이 곧바로 인게임으로 진입한다(인게임은 검은색 바가 화면을 덮은 상태에서 시작한다).
+        private void StartGame()
         {
             transitioning = true;
             GameSession.PlayerName = buffer.ToString();
-            GameSession.IsRetry = false;
 
-            if (caret != null) caret.gameObject.SetActive(false);
-            AudioManager.StopAllLoops(fadeOutDuration);
-
-            float t = 0f;
-            while (t < fadeOutDuration)
-            {
-                t += Time.unscaledDeltaTime;
-                SetOverlayAlpha(Mathf.Clamp01(t / fadeOutDuration));
-                yield return null;
-            }
-            SetOverlayAlpha(1f);
-
+            AudioManager.StopAllLoops();
             SceneManager.LoadScene(GameSession.GameSceneName);
-        }
-
-        private void SetOverlayAlpha(float alpha)
-        {
-            if (fadeOverlay == null) return;
-            Color color = fadeOverlay.color;
-            color.a = alpha;
-            fadeOverlay.color = color;
-            fadeOverlay.enabled = alpha > 0.001f;
         }
     }
 }

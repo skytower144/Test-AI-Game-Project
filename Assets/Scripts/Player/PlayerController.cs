@@ -38,10 +38,31 @@ namespace Chopper
             if (health == null) health = GetComponent<PlayerHealth>();
         }
 
+        private void OnEnable()
+        {
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
+        }
+
         private void Start()
+        {
+            MoveToStart();
+        }
+
+        private void OnGameReset(GameResetEvent evt)
+        {
+            MoveToStart();
+        }
+
+        private void MoveToStart()
         {
             Vector2 start = StartPosition;
             transform.position = new Vector3(start.x, start.y, 0f);
+            velocity = Vector2.zero;
         }
 
         private void Update()

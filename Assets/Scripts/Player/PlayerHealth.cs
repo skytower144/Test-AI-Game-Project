@@ -85,11 +85,13 @@ namespace Chopper
         {
             Current = this;
             EventBus.Subscribe<ItemPickedEvent>(OnItemPicked);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<ItemPickedEvent>(OnItemPicked);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
             if (Current == this) Current = null;
         }
 
@@ -197,6 +199,21 @@ namespace Chopper
         {
             // 구급상자: 체력바 한 칸 회복
             if (evt.type == ItemType.Medkit) Heal(1);
+        }
+
+        // RETRY: 사망 연출/점멸/무적을 모두 걷어내고 처음 상태(체력 가득)로 되돌린다.
+        // 위치는 PlayerController가 시작 위치로 되돌린다.
+        private void OnGameReset(GameResetEvent evt)
+        {
+            if (deathSequence != null) deathSequence.ResetVisual();
+            if (flasher != null) flasher.Stop();
+
+            dead = false;
+            health = maxHealth;
+            invincibleTimer = 0f;
+            hitCollider.enabled = true;
+
+            EventBus.Publish(new PlayerHealthChangedEvent { health = health, maxHealth = maxHealth });
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

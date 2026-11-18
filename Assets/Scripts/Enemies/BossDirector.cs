@@ -9,7 +9,7 @@ namespace Chopper
     {
         [SerializeField] private Boss bossPrefab;
         [Tooltip("게임 시작 또는 보스 처치 후 다음 보스 등장까지의 시간(초)")]
-        [SerializeField, Min(0f)] private float spawnDelay = 60f;
+        [SerializeField, Min(0f)] private float spawnDelay = 40f;
 
         private float timer;
         private bool bossAlive;
@@ -22,12 +22,14 @@ namespace Chopper
         {
             EventBus.Subscribe<BossDefeatedEvent>(OnBossDefeated);
             EventBus.Subscribe<GameOverEvent>(OnGameOver);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<BossDefeatedEvent>(OnBossDefeated);
             EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
         }
 
         private void Update()
@@ -55,6 +57,14 @@ namespace Chopper
         private void OnGameOver(GameOverEvent evt)
         {
             gameOver = true;
+        }
+
+        // RETRY: 보스는 이미 풀로 반납된 상태. 등장 타이머를 처음부터 다시 센다
+        private void OnGameReset(GameResetEvent evt)
+        {
+            bossAlive = false;
+            gameOver = false;
+            timer = 0f;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Chopper
     {
         [Header("Wasp Movement")]
         [Tooltip("왼쪽으로 이동하는 속도 범위(유닛/초)")]
-        [SerializeField] private Vector2 speedRange = new Vector2(1.3f, 2.3f);
+        [SerializeField] private Vector2 speedRange = new Vector2(1.95f, 3.45f);
         [Tooltip("사인파 진폭 범위(유닛)")]
         [SerializeField] private Vector2 amplitudeRange = new Vector2(0.25f, 0.85f);
         [Tooltip("사인파 각속도 범위(라디안/초)")]

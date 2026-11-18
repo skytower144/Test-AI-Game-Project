@@ -212,9 +212,11 @@ MonoBehaviour:
   hitColliders:
   - {fileID: 4314197653917065962}
   bulletPrefab: {fileID: 1024460434912057625, guid: 121eb679f4f31d641a12a32e11898021, type: 3}
-  flyBySpeed: 16
-  flyByPause: 0.7
-  revealDuration: 2.6
+  flyBySpeed: 24
+  flyByEase: 2
+  flyByPause: 0.47
+  revealDuration: 1.73
+  revealEase: 3
   offscreenMargin: 2.4
   anchorViewport: {x: 0.8, y: 0.5}
   firstPatternDelay: 1.2
@@ -230,23 +232,23 @@ MonoBehaviour:
     fireInterval: 0.75
     bulletCount: 5
     spreadStep: 14
-    bulletSpeed: 4.2
+    bulletSpeed: 6.3
   pattern2:
     sweeps: 4
-    sweepPeriod: 1.1
+    sweepPeriod: 0.61
     sweepAngle: 55
-    fireInterval: 0.05
-    bulletSpeed: 5.5
+    fireInterval: 0.033
+    bulletSpeed: 8.25
   pattern3:
     revolutions: 3
-    revolutionTime: 2
-    fireInterval: 0.065
-    bulletSpeed: 3.2
+    revolutionTime: 1.11
+    fireInterval: 0.043
+    bulletSpeed: 4.8
   pattern4:
     volleys: 3
     volleyInterval: 0.8
     bulletsPerVolley: 24
-    bulletSpeed: 3.2
+    bulletSpeed: 4.8
     moveAmplitude: 1.2
     movePeriod: 1.6
     leadTime: 0.4
@@ -254,19 +256,45 @@ MonoBehaviour:
   pattern5:
     duration: 8
     directions: 8
-    fireInterval: 0.14
-    rotationSpeed: 22
-    bulletSpeed: 3.4
+    fireInterval: 0.093
+    rotationSpeed: 39.6
+    bulletSpeed: 5.1
   hitFlashInterval: 0.05
-  deathSmallExplosionTime: 1.8
-  deathSmallExplosionInterval: {x: 0.06, y: 0.15}
+  deathFlashMaterial: {fileID: 2100000, guid: 0627c2de969117a4eae64a99e372e792, type: 2}
+  deathFlashInterval: 0.05
+  deathShakeDuration: 1
+  deathShakeAmplitude: 0.08
+  deathShakeFrequency: 50
+  deathStillDuration: 1
+  deathSmallExplosionInterval: {x: 0.03, y: 0.075}
   deathSmallExplosionScale: {x: 1.6, y: 2.8}
   hullHalfExtents: {x: 1.05, y: 0.6}
-  deathShake: 0.04
   blastCount: 3
   blastInterval: 0.1
   blastSpread: 0.85
   blastScale: 1
+  hullBottomY: -0.74
+  blastBaseToCenter: 0.70625
+  wreckPrefab: {fileID: 4650282492972455146, guid: 40f29e16980e6054d81b8e59f35d84cc, type: 3}
+  hullSplit: 0.5
+  rearPartVelocity: {x: -1.4, y: 2.4}
+  frontPartVelocity: {x: 1.2, y: 2}
+  rearPartSpin: 70
+  frontPartSpin: -55
+  debrisSprites:
+  - {fileID: 21300000, guid: f49c685196c2d6c48b4087b87045b96d, type: 3}
+  - {fileID: 21300000, guid: 24f981be14def3a45b569ed3b81e4b1a, type: 3}
+  - {fileID: 21300000, guid: 050baffbf515d7047bda90e1288df386, type: 3}
+  - {fileID: 21300000, guid: 57a2af3061b078a4786b0ea864f98544, type: 3}
+  - {fileID: 21300000, guid: 742a9f93d3e342545b259405d36ed54c, type: 3}
+  - {fileID: 21300000, guid: d4728e8421b33b040bad5ea65d2f42e9, type: 3}
+  - {fileID: 21300000, guid: 219e010c949d91248b7bb799a0572175, type: 3}
+  - {fileID: 21300000, guid: 33b1fb3edd5ebba469264e8e737e4887, type: 3}
+  - {fileID: 21300000, guid: a6bb6bcb1f541934f81b1a7ec2f86ccc, type: 3}
+  debrisCountRange: {x: 4, y: 6}
+  debrisSpeedRange: {x: 3, y: 6.5}
+  debrisAngleRange: {x: 30, y: 150}
+  debrisSpinRange: {x: -360, y: 360}
   postDeathDelay: 1.2
 --- !u!1 &4783003088623534819
 GameObject:

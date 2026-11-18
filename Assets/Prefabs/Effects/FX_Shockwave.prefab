@@ -158,7 +158,7 @@ MonoBehaviour:
   duration: 0.9
   maxRadius: 9.5
   startRadius: 0.2
-  startThickness: 0.6
+  startThickness: 0.24
   startColor: {r: 1, g: 0.1, b: 0.06, a: 1}
   endColor: {r: 1, g: 0.93, b: 0.2, a: 1}
   radiusCurve:

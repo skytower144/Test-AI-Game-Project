@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Chopper
 {
@@ -91,11 +90,13 @@ namespace Chopper
 
         private void Start()
         {
+            AnnounceStart(false);
+        }
+
+        private void AnnounceStart(bool isRetry)
+        {
             EventBus.Publish(new ScoreChangedEvent { score = score, delta = 0 });
             EventBus.Publish(new LivesChangedEvent { lives = lives, maxLives = maxLives });
-
-            bool isRetry = GameSession.IsRetry;
-            GameSession.IsRetry = false;
             EventBus.Publish(new GameStartedEvent { isRetry = isRetry });
         }
 
@@ -169,11 +170,30 @@ namespace Chopper
 
         // ───────────── 결과 화면 동작 ─────────────
 
-        /// <summary>타이틀을 거치지 않고 인게임을 처음 상태로 다시 시작한다.</summary>
+        /// <summary>타이틀을 거치지 않고, 씬을 다시 로드하지도 않고 인게임을 처음 상태로 되돌린다.</summary>
         public static void Retry()
         {
-            GameSession.IsRetry = true;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            if (s_Instance != null) s_Instance.Restart();
+        }
+
+        private void Restart()
+        {
+            StopAllCoroutines();
+
+            score = 0;
+            lives = maxLives;
+            state = GameState.Playing;
+            awaitingRevive = false;
+
+            Time.timeScale = 1f;
+            Cursor.visible = false;
+
+            // 총알, 몬스터, 보스, 아이템, 이펙트, 잔해 등 풀링된 모든 오브젝트를 반납한 뒤
+            // 플레이어/스포너/UI 등 씬에 상주하는 시스템이 각자 초기 상태로 돌아가도록 알린다.
+            PoolManager.DespawnAll();
+            EventBus.Publish(new GameResetEvent());
+
+            AnnounceStart(true);
         }
 
         /// <summary>게임 종료.</summary>

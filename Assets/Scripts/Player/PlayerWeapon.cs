@@ -4,7 +4,7 @@ namespace Chopper
 {
     /// <summary>
     /// 발사키를 누르고 있는 동안 총알을 연발한다.
-    /// 기본은 첫 번째 총알타입, 라이플 탄창을 획득하면 일정 시간 두 번째 총알타입으로 바뀐다.
+    /// 기본은 첫 번째 총알타입 1발, 라이플 탄창을 획득하면 일정 시간 동안 두 번째 총알타입을 함께 쏴 한 번에 2발을 발사한다.
     /// </summary>
     public sealed class PlayerWeapon : MonoBehaviour
     {
@@ -17,13 +17,17 @@ namespace Chopper
         [Header("Firing")]
         [Tooltip("발사 간격(초). 두 총알타입에 동일하게 적용")]
         [SerializeField, Min(0.01f)] private float fireInterval = 0.09f;
-        [Tooltip("라이플 탄창 지속 시간(초). 재획득 시 이 값으로 초기화")]
+        [Tooltip("라이플 탄창 지속 시간(초). 이 시간 동안 두 번째 총알타입이 함께 발사된다. 재획득 시 이 값으로 초기화")]
         [SerializeField, Min(0f)] private float rifleDuration = 10f;
 
         [Header("References")]
-        [Tooltip("총알 발사 지점(헬리콥터의 문)")]
+        [Tooltip("첫 번째 총알타입 발사 지점(헬리콥터의 문)")]
         [SerializeField] private Transform firePoint;
         [SerializeField] private SpriteAnimator muzzleFlash;
+        [Tooltip("두 번째 총알타입 발사 지점(문 오른쪽 위 꼭짓점의 수직선이 천장과 만나는 위치)")]
+        [SerializeField] private Transform rifleFirePoint;
+        [Tooltip("두 번째 총알타입의 Muzzle Flash(헬리콥터 이미지 뒤에 그려진다)")]
+        [SerializeField] private SpriteAnimator rifleMuzzleFlash;
         [SerializeField] private PlayerHealth health;
 
         private float cooldown;
@@ -31,24 +35,29 @@ namespace Chopper
         private bool wasFiring;
 
         public float RifleTimeLeft => rifleTimeLeft;
-        public BulletType CurrentBulletType => rifleTimeLeft > 0f ? BulletType.Rifle : BulletType.Primary;
+
+        /// <summary>라이플 탄창 효과(두 번째 총알타입 동시 발사)가 켜져 있는지.</summary>
+        public bool RifleActive => rifleTimeLeft > 0f;
 
         private void Awake()
         {
             if (health == null) health = GetComponent<PlayerHealth>();
             if (firePoint == null) firePoint = transform;
+            if (rifleFirePoint == null) rifleFirePoint = firePoint;
         }
 
         private void OnEnable()
         {
             EventBus.Subscribe<ItemPickedEvent>(OnItemPicked);
             EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<ItemPickedEvent>(OnItemPicked);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
         }
 
         private void Update()
@@ -77,14 +86,22 @@ namespace Chopper
 
         private void Fire(float overdue)
         {
-            BulletType type = CurrentBulletType;
-            Bullet prefab = type == BulletType.Rifle && rifleBulletPrefab != null ? rifleBulletPrefab : primaryBulletPrefab;
-            if (prefab == null) return;
+            // 첫 번째 총알타입은 항상 발사
+            Shoot(primaryBulletPrefab, firePoint, muzzleFlash, BulletType.Primary, overdue);
 
-            Bullet bullet = PoolManager.Spawn(prefab, firePoint.position, Quaternion.identity);
+            // 라이플 탄창 지속 중에는 두 번째 총알타입을 함께 발사 → 한 번에 2발
+            if (RifleActive)
+                Shoot(rifleBulletPrefab, rifleFirePoint, rifleMuzzleFlash, BulletType.Rifle, overdue);
+        }
+
+        private static void Shoot(Bullet prefab, Transform origin, SpriteAnimator flash, BulletType type, float overdue)
+        {
+            if (prefab == null || origin == null) return;
+
+            Bullet bullet = PoolManager.Spawn(prefab, origin.position, Quaternion.identity);
             if (bullet != null) bullet.Launch(Vector2.right, 0f, overdue);
 
-            if (muzzleFlash != null) muzzleFlash.Play();
+            if (flash != null) flash.Play();
             EventBus.Publish(new PlayerFiredEvent { bulletType = type });
         }
 
@@ -108,6 +125,22 @@ namespace Chopper
         private void OnPlayerDied(PlayerDiedEvent evt)
         {
             rifleTimeLeft = 0f;
+        }
+
+        private void OnGameReset(GameResetEvent evt)
+        {
+            rifleTimeLeft = 0f;
+            cooldown = 0f;
+            wasFiring = false;
+            HideFlash(muzzleFlash);
+            HideFlash(rifleMuzzleFlash);
+        }
+
+        private static void HideFlash(SpriteAnimator flash)
+        {
+            if (flash == null) return;
+            flash.Stop();
+            if (flash.Target != null) flash.Target.enabled = false;
         }
     }
 }

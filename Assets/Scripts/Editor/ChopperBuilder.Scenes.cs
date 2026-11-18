@@ -55,26 +55,39 @@ namespace Chopper.EditorTools
             Set(pulse, "maxAlpha", 1f);
             Set(pulse, "period", 2.8f);
 
-            // 중앙: 제목 + 입력창 (화면 폭의 약 1/3)
-            const float boxWidth = 672f;   // Fuel_Bar 112px × 6
-            const float boxHeight = 60f;   // Fuel_Bar 10px × 6
-            const float titleCapHeight = boxHeight * 1.2f; // 제목은 입력창 높이의 약 1.2배
-            const float gap = 44f;
+            // 중앙: 제목 + 입력창
+            const float boxScale = 6f;                 // Fuel_Bar 1px → 6px
+            const float boxWidth = 112f * boxScale * 0.6f; // Fuel_Bar 112px × 6의 0.6배 길이
+            const float boxHeight = 10f * boxScale;    // Fuel_Bar 10px × 6
+            const float titleWidth = boxWidth * 0.9f;  // 제목은 입력창 너비보다 약간 좁게
+            const float gap = 40f;
+
+            // 제목: Italic 미적용. 글자 폭이 titleWidth가 되도록 폰트 크기를 맞춘다
+            const float referenceFontSize = 100f;
+            TextMeshProUGUI title = NewText("Title", root, spacerunner, "CHOPPER", referenceFontSize,
+                UiGreen, TextAlignmentOptions.Capline, false);
+            float naturalWidth = title.GetPreferredValues("CHOPPER").x;
+            if (naturalWidth < 1f) naturalWidth = referenceFontSize * 3.9f; // 측정 실패 시 Spacerunner의 대략적인 폭 비율
+            title.fontSize = referenceFontSize * titleWidth / naturalWidth;
+
+            // Spacerunner의 대문자 높이는 폰트 크기의 약 0.623배
+            float titleCapHeight = title.fontSize * 0.623f;
             float groupHeight = titleCapHeight + gap + boxHeight;
             float titleY = groupHeight * 0.5f - titleCapHeight * 0.5f;
             float boxY = -groupHeight * 0.5f + boxHeight * 0.5f;
-
-            // Spacerunner의 대문자 높이는 폰트 크기의 약 0.623배
-            TextMeshProUGUI title = NewText("Title", root, spacerunner, "CHOPPER", titleCapHeight / 0.623f,
-                UiGreen, TextAlignmentOptions.Capline, true);
             Place(Rect(title), Center, Center, new Vector2(0f, titleY), new Vector2(900f, titleCapHeight + 40f));
 
+            // Fuel_Bar의 첫 번째 스프라이트. 9-slice로 길이를 줄여도 테두리 픽셀 비율이 유지된다
             Sprite[] fuelBar = LoadSprites(FuelBarTex);
-            Image inputBox = NewImage("Input Box", root, fuelBar[0], Color.white); // Fuel_Bar의 첫 번째 스프라이트
+            Image inputBox = NewImage("Input Box", root, fuelBar[0], Color.white);
+            inputBox.type = Image.Type.Sliced;
+            inputBox.fillCenter = true;
+            inputBox.pixelsPerUnitMultiplier = 1f / boxScale;
             Place(Rect(inputBox), Center, Center, new Vector2(0f, boxY), new Vector2(boxWidth, boxHeight));
 
+            // 입력창 안에서 희미하게 보일 정도로 어둡게
             Color faint = UiGreen;
-            faint.a = 0.3f;
+            faint.a = 0.13f;
             TextMeshProUGUI placeholder = NewText("Placeholder", inputBox.transform, baskic, "INSERT NAME", 28f,
                 faint, TextAlignmentOptions.Capline, true);
             Stretch(Rect(placeholder));
@@ -92,9 +105,6 @@ namespace Chopper.EditorTools
             Place(Rect(crewIcon), Center, Center,
                 new Vector2(-(boxWidth * 0.5f + 14f + boxHeight * 0.5f), boxY), new Vector2(boxHeight, boxHeight));
 
-            Image fade = NewImage("Fade Overlay", root, null, new Color(0f, 0f, 0f, 0f));
-            Stretch(Rect(fade));
-
             // 커서: mouse-pointer.png, 크기는 입력창 높이의 약 절반
             BuildCursor(root, 32f, true);
 
@@ -102,7 +112,6 @@ namespace Chopper.EditorTools
             Set(titleScreen, "nameText", nameText);
             Set(titleScreen, "placeholderText", placeholder);
             Set(titleScreen, "caret", Rect(caret));
-            Set(titleScreen, "fadeOverlay", fade);
             Set(titleScreen, "placeholderAlpha", faint.a);
 
             EditorSceneManager.SaveScene(scene, TitleScenePath);
@@ -210,7 +219,7 @@ namespace Chopper.EditorTools
                 Prewarm(PfPlayerBulletRifle, 24),
                 Prewarm(PfEnemyBullet, 220),
                 Prewarm(PfFxBulletHit, 40),
-                Prewarm(PfFxSmallExplosion, 16),
+                Prewarm(PfFxSmallExplosion, 32),
                 Prewarm(PfFxBigExplosion, 2),
                 Prewarm(PfFxPlayerHit, 4),
                 Prewarm(PfFxBossBlast, 3),
@@ -218,6 +227,7 @@ namespace Chopper.EditorTools
                 Prewarm(PfWasp, 8),
                 Prewarm(PfHornet, 4),
                 Prewarm(PfBoss, 1),
+                Prewarm(PfWreckBoss, 8),
                 Prewarm(PfItemRifle, 4),
                 Prewarm(PfItemShotgun, 3),
                 Prewarm(PfItemMedkit, 2),
@@ -249,7 +259,7 @@ namespace Chopper.EditorTools
 
             var bossDirector = NewObject("BossDirector", systems.transform).AddComponent<BossDirector>();
             Set(bossDirector, "bossPrefab", Prefab<Boss>(PfBoss));
-            Set(bossDirector, "spawnDelay", 60f);
+            Set(bossDirector, "spawnDelay", 40f);
 
             var dropper = NewObject("ItemDropper", systems.transform).AddComponent<ItemDropper>();
             Set(dropper, "drops", new[]
@@ -272,20 +282,21 @@ namespace Chopper.EditorTools
             Set(debrisSpawner, "debrisPrefab", Prefab<DriftingDebris>(PfDebris));
             Set(debrisSpawner, "sprites", LoadSprites(DebrisTex)); // debris.png의 모든 스프라이트
 
-            // ── 전경(화면 아래쪽 절반): 달 표면 패럴랙스. 산은 후경, 분화구는 전경 ──
+            // ── 전경(화면 아래쪽 절반): 달 표면 패럴랙스. 산(Layer 1)은 후경, 분화구(Layer 2, 3)는 전경 ──
+            // Layer 2, 3은 앞쪽(카메라 가까이)에 배치: 화면 아래쪽을 가득 채우도록 더 크게, 더 빠르게 흐른다.
             GameObject foreground = NewObject("Foreground");
-            const float layerScale = 1.5f;
-            const float seam = 0.02f; // 띠 사이 틈이 보이지 않도록 살짝 겹침
-            float h12 = 0.32f * layerScale; // Layer 1, 2: 32px
-            float h34 = 0.64f * layerScale; // Layer 3, 4: 64px
-            float y4 = -orthoSize - seam + h34 * 0.5f;
-            float y3 = y4 + h34 * 0.5f - seam + h34 * 0.5f;
-            float y2 = y3 + h34 * 0.5f - seam + h12 * 0.5f;
-            float y1 = y2 + h12 * 0.5f - seam + h12 * 0.5f;
-            BuildParallaxLayer(foreground.transform, "Surface Layer 1 (Mountains)", 1, y1, 0.35f, 0, layerScale);
-            BuildParallaxLayer(foreground.transform, "Surface Layer 2 (Far Craters)", 2, y2, 0.9f, 1, layerScale);
-            BuildParallaxLayer(foreground.transform, "Surface Layer 3 (Craters)", 3, y3, 1.8f, 2, layerScale);
-            BuildParallaxLayer(foreground.transform, "Surface Layer 4 (Near Craters)", 4, y4, 3.2f, 3, layerScale);
+            const float farScale = 1.5f;  // Layer 1
+            const float nearScale = 2.5f; // Layer 2, 3
+            const float seam = 0.02f;     // 띠 사이 틈이 보이지 않도록 살짝 겹침
+            float h1 = 0.32f * farScale;  // Layer 1: 32px
+            float h2 = 0.32f * nearScale; // Layer 2: 32px
+            float h3 = 0.64f * nearScale; // Layer 3: 64px
+            float y3 = -orthoSize - seam + h3 * 0.5f;
+            float y2 = y3 + h3 * 0.5f - seam + h2 * 0.5f;
+            float y1 = y2 + h2 * 0.5f - seam + h1 * 0.5f;
+            BuildParallaxLayer(foreground.transform, "Surface Layer 1 (Mountains)", 1, y1, 0.35f, 0, farScale);
+            BuildParallaxLayer(foreground.transform, "Surface Layer 2 (Craters)", 2, y2, 1.6f, 1, nearScale);
+            BuildParallaxLayer(foreground.transform, "Surface Layer 3 (Near Craters)", 3, y3, 3.2f, 2, nearScale);
 
             // ── 최전방 안개 ──
             BuildFog(halfWidth);
@@ -339,7 +350,7 @@ namespace Chopper.EditorTools
             main.loop = true;
             main.prewarm = false;
             main.playOnAwake = true;
-            main.startLifetime = 3.4f;
+            main.startLifetime = 2.3f;
             main.startSpeed = 0f;
             main.startSize = new ParticleSystem.MinMaxCurve(2.6f, 4.6f);
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
@@ -352,7 +363,7 @@ namespace Chopper.EditorTools
 
             ParticleSystem.EmissionModule emission = particles.emission;
             emission.enabled = true;
-            emission.rateOverTime = 5f;
+            emission.rateOverTime = 7.5f; // 빨라진 만큼 화면에 머무는 시간이 줄어 같은 농도가 되도록 방출량도 1.5배
 
             ParticleSystem.ShapeModule shape = particles.shape;
             shape.enabled = true;
@@ -363,7 +374,7 @@ namespace Chopper.EditorTools
             ParticleSystem.VelocityOverLifetimeModule velocity = particles.velocityOverLifetime;
             velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.World;
-            velocity.x = new ParticleSystem.MinMaxCurve(-8f, -5.5f);
+            velocity.x = new ParticleSystem.MinMaxCurve(-12f, -8.25f);
             velocity.y = new ParticleSystem.MinMaxCurve(-0.15f, 0.15f);
             velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
 
@@ -403,7 +414,11 @@ namespace Chopper.EditorTools
             GameObject bar = NewObject("Player Health Bar");
             const int cellCount = 5;
             const float cellScale = 1.5f;
-            const float spacing = 0.13f;
+            // 칸 폭 6px(0.09유닛) + 틈 1px(0.015유닛): 전체 길이가 프로펠러 길이를 약간 벗어나는 정도
+            const float spacing = 0.105f;
+
+            // 기울어진 헬리콥터의 로터 축(프레임 기준 (60.5, 2.5)px) 바로 위에 중심을 맞춘다
+            var offset = new Vector2(HelicopterPoint(60.5f, 2.5f).x * PlayerScale, 0.47f);
 
             var cells = new SpriteRenderer[cellCount];
             for (int i = 0; i < cellCount; i++)
@@ -416,12 +431,12 @@ namespace Chopper.EditorTools
 
             var healthBar = bar.AddComponent<PlayerHealthBar>();
             Set(healthBar, "target", player);
-            Set(healthBar, "offset", new Vector2(0.12f, 0.47f));
+            Set(healthBar, "offset", offset);
             Set(healthBar, "cells", cells);
             Set(healthBar, "filledSprite", counter[0]);
             Set(healthBar, "emptySprite", counter[1]);
 
-            bar.transform.position = player.position + new Vector3(0.12f, 0.47f, 0f);
+            bar.transform.position = player.position + (Vector3)offset;
         }
 
         private static void BuildHud()
@@ -453,10 +468,11 @@ namespace Chopper.EditorTools
                 lifeIcons[i] = icon.gameObject;
             }
 
-            // 화면 중앙 안내 문구
-            TextMeshProUGUI revivePrompt = NewText("Revive Prompt", root, baskic, "PRESS R TO REVIVE", 34f, UiGreen,
-                TextAlignmentOptions.Capline, false);
-            Place(Rect(revivePrompt), Center, Center, new Vector2(0f, -150f), new Vector2(1200f, 60f));
+            // 오른쪽 상단: 부활 안내 문구(점수와 같은 크기, 점수와 대칭 위치)
+            var topRight = new Vector2(1f, 1f);
+            TextMeshProUGUI revivePrompt = NewText("Revive Prompt", root, baskic, "PRESS R TO REVIVE", scoreFontSize, UiGreen,
+                TextAlignmentOptions.TopRight, false);
+            Place(Rect(revivePrompt), topRight, topRight, new Vector2(-48f, -36f), new Vector2(900f, 64f));
 
             // GAME OVER: SCORE 텍스트의 약 1.5배 크기
             TextMeshProUGUI gameOver = NewText("Game Over", root, baskic, "GAME OVER", scoreFontSize * 1.5f, UiGreen,
@@ -501,7 +517,7 @@ namespace Chopper.EditorTools
             var banner = canvas.gameObject.AddComponent<GameOverBanner>();
             Set(banner, "gameOverRoot", gameOver.gameObject);
             Set(banner, "revivePromptRoot", revivePrompt.gameObject);
-            Set(banner, "revivePromptText", revivePrompt);
+            Set(banner, "revivePromptGraphic", revivePrompt);
 
             var panel = canvas.gameObject.AddComponent<ResultsPanel>();
             Set(panel, "panelRoot", results.root);
@@ -588,22 +604,25 @@ namespace Chopper.EditorTools
         private static RectTransform BuildResultsButton(Transform parent, TMP_FontAsset font, string name,
             Sprite iconSprite, string label, float x)
         {
+            // 아이콘과 이름의 크기 배율
+            const float size = 0.6f;
+
             GameObject button = NewUI(name, parent);
             var rect = (RectTransform)button.transform;
             rect.pivot = Center;
-            rect.sizeDelta = new Vector2(220f, 200f);
+            rect.sizeDelta = new Vector2(220f, 200f) * size;
             rect.anchoredPosition = new Vector2(x, 0f);
 
-            // 아이콘: 원본 비율을 유지하며 높이 110px
-            const float iconHeight = 110f;
+            // 아이콘: 원본 비율을 유지
+            const float iconHeight = 110f * size;
             float aspect = iconSprite.rect.width / iconSprite.rect.height;
             Image icon = NewImage("Icon", button.transform, iconSprite, Color.white);
             icon.preserveAspect = true;
-            Place(Rect(icon), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(iconHeight * aspect, iconHeight));
+            Place(Rect(icon), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f * size), new Vector2(iconHeight * aspect, iconHeight));
 
             // 아이콘 아래 이름
-            TextMeshProUGUI text = NewText("Label", button.transform, font, label, 34f, UiGreen, TextAlignmentOptions.Capline, false);
-            Place(Rect(text), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f), new Vector2(220f, 50f));
+            TextMeshProUGUI text = NewText("Label", button.transform, font, label, 34f * size, UiGreen, TextAlignmentOptions.Capline, false);
+            Place(Rect(text), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f * size), new Vector2(220f, 50f * size));
 
             return rect;
         }

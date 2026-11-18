@@ -25,6 +25,7 @@ namespace Chopper
             EventBus.Subscribe<PlayerHealthChangedEvent>(OnHealthChanged);
             EventBus.Subscribe<PlayerExplodedEvent>(OnPlayerExploded);
             EventBus.Subscribe<PlayerRevivedEvent>(OnPlayerRevived);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
@@ -32,6 +33,7 @@ namespace Chopper
             EventBus.Unsubscribe<PlayerHealthChangedEvent>(OnHealthChanged);
             EventBus.Unsubscribe<PlayerExplodedEvent>(OnPlayerExploded);
             EventBus.Unsubscribe<PlayerRevivedEvent>(OnPlayerRevived);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
         }
 
         private void LateUpdate()
@@ -56,6 +58,11 @@ namespace Chopper
         }
 
         private void OnPlayerRevived(PlayerRevivedEvent evt)
+        {
+            SetVisible(true);
+        }
+
+        private void OnGameReset(GameResetEvent evt)
         {
             SetVisible(true);
         }

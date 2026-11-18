@@ -55,11 +55,23 @@ namespace Chopper
         private void OnEnable()
         {
             EventBus.Subscribe<ResultsShownEvent>(OnResultsShown);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<ResultsShownEvent>(OnResultsShown);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
+        }
+
+        // RETRY: 결과 화면과 커서를 닫는다
+        private void OnGameReset(GameResetEvent evt)
+        {
+            shown = false;
+            if (panelRoot != null) panelRoot.SetActive(false);
+            if (cursorObject != null) cursorObject.SetActive(false);
+            if (retryButton != null) retryButton.localScale = Vector3.one;
+            if (quitButton != null) quitButton.localScale = Vector3.one;
         }
 
         private void OnResultsShown(ResultsShownEvent evt)

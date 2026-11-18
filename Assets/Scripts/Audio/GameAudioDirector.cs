@@ -31,6 +31,7 @@ namespace Chopper
         private void OnEnable()
         {
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
             EventBus.Subscribe<PlayerFiredEvent>(OnPlayerFired);
             EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
@@ -53,6 +54,7 @@ namespace Chopper
         private void OnDisable()
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
             EventBus.Unsubscribe<PlayerFiredEvent>(OnPlayerFired);
             EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
@@ -92,12 +94,23 @@ namespace Chopper
             if (evt.isRetry) AudioManager.Play(SoundId.Revive); // Revive.mp3: 부활 및 RETRY
         }
 
+        // RETRY: 배경음은 그대로 이어가고, 보스/사망 연출에 딸린 루프와 피치만 처음 상태로 되돌린다.
+        private void OnGameReset(GameResetEvent evt)
+        {
+            playerDying = false;
+            AudioManager.StopLoop(SoundId.BossEngine, bossEngineFadeOut);
+            AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
+            AudioManager.SetLoopPitch(SoundId.Chopper, 1f);
+        }
+
         // ───────────── 플레이어 ─────────────
 
         private void OnPlayerFired(PlayerFiredEvent evt)
         {
+            // Gun.wav: 첫 번째 총알타입, Gun2.mp3: 두 번째 총알타입
             AudioManager.Play(evt.bulletType == BulletType.Rifle ? SoundId.Gun2 : SoundId.Gun);
-            AudioManager.Play(SoundId.GunLayer); // 발사음에 공통으로 얹는 낮은 볼륨의 소리
+            // 발사음에 공통으로 얹는 낮은 볼륨의 소리(두 총알이 같은 순간에 발사되면 최소 간격 정책으로 한 번만 재생된다)
+            AudioManager.Play(SoundId.GunLayer);
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)

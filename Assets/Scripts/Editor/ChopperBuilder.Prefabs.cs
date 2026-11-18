@@ -23,6 +23,7 @@ namespace Chopper.EditorTools
         private const string PfWasp = "Enemies/Enemy_Wasp.prefab";
         private const string PfHornet = "Enemies/Enemy_Hornet.prefab";
         private const string PfBoss = "Enemies/Boss.prefab";
+        private const string PfWreckBoss = "Enemies/Wreck_BossPart.prefab";
 
         private const string PfItemRifle = "Items/Item_RifleAmmo.prefab";
         private const string PfItemShotgun = "Items/Item_ShotgunAmmo.prefab";
@@ -37,6 +38,27 @@ namespace Chopper.EditorTools
 
         /// <summary>헬리콥터(및 그 잔해)의 표시 배율. 1 = 화면 2px/아트 1px.</summary>
         private const float PlayerScale = 1.5f;
+
+        /// <summary>헬리콥터 이미지가 앞으로 쏠리도록 기울이는 각도(도). 음수 = 시계 방향(기수가 아래로).</summary>
+        private const float PlayerTilt = -10f;
+
+        /// <summary>보스 선체(Ship6)의 표시 배율.</summary>
+        private const float BossShipScale = 2f;
+
+        /// <summary>보스 대형 폭발(explosion-4) 이펙트의 표시 배율.</summary>
+        private const float BossBlastScale = 1.25f;
+
+        /// <summary>기울이기 전 헬리콥터 이미지 위의 좌표(중심 원점, 유닛)를 기울어진 이미지 위의 좌표로 옮긴다.</summary>
+        private static Vector2 Tilted(Vector2 point)
+        {
+            return Quaternion.Euler(0f, 0f, PlayerTilt) * point;
+        }
+
+        /// <summary>helicopter.png 프레임(96x32)의 픽셀 좌표(왼쪽 위 원점) → 기울어진 이미지 위의 로컬 좌표.</summary>
+        private static Vector2 HelicopterPoint(float pixelX, float pixelY)
+        {
+            return Tilted(new Vector2((pixelX - 48f) / 100f, (16f - pixelY) / 100f));
+        }
 
         private static GameObject Prefab(string relativePath)
         {
@@ -74,13 +96,14 @@ namespace Chopper.EditorTools
             BuildEffect(PfFxSmallExplosion, LoadSprites(SmallExplosionTex), 16f, 1f, 0);
             BuildEffect(PfFxBigExplosion, LoadSprites(BigExplosionTex), 14f, 4f, 20);
             BuildEffect(PfFxPlayerHit, LoadSprites(PlayerHitTex), 30f, 0.13f, 15);
-            BuildEffect(PfFxBossBlast, LoadSprites(BossBlastTex), 12f, 2.5f, 25);
+            BuildEffect(PfFxBossBlast, LoadSprites(BossBlastTex), 12f, BossBlastScale, 25);
             BuildShockwave(PfFxShockwave);
 
             // ── 몬스터 / 보스 ──
             BuildWasp(PfWasp, whiteMat);
             BuildHornet(PfHornet, whiteMat);
-            BuildBoss(PfBoss, whiteMat, fx03);
+            BuildBossWreck(PfWreckBoss);
+            BuildBoss(PfBoss, whiteMat, redMat, fx03);
 
             // ── 아이템 ──
             BuildItem(PfItemRifle, Load<Sprite>(RifleAmmoTex), ItemType.RifleAmmo);
@@ -124,7 +147,7 @@ namespace Chopper.EditorTools
         private static void BuildEnemyBullet(string path, Sprite sprite)
         {
             GameObject go = NewObject(Path.GetFileNameWithoutExtension(path));
-            go.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+            go.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
 
             // 탄막은 항상 가장 잘 보여야 하므로 이펙트보다 위에 그린다
             AddSprite(go, sprite, SortEffects, 50);
@@ -133,11 +156,11 @@ namespace Chopper.EditorTools
             Set(bullet, "team", BulletTeam.Enemy);
             Set(bullet, "speed", 4.5f);
             Set(bullet, "damage", 1);
-            Set(bullet, "hitRadius", 0.07f);
+            Set(bullet, "hitRadius", 0.056f);
             Set(bullet, "targetMask", (LayerMask)0);
             Set(bullet, "rotateToDirection", false);
             Set(bullet, "despawnMargin", 0.3f);
-            Set(bullet, "hitEffectScale", 0.8f);
+            Set(bullet, "hitEffectScale", 0.64f);
 
             SavePrefab(go, path);
         }
@@ -179,7 +202,7 @@ namespace Chopper.EditorTools
             Set(shockwave, "duration", 0.9f);
             Set(shockwave, "maxRadius", 9.5f);
             Set(shockwave, "startRadius", 0.2f);
-            Set(shockwave, "startThickness", 0.6f);
+            Set(shockwave, "startThickness", 0.24f);
             Set(shockwave, "startColor", new Color(1f, 0.1f, 0.06f, 1f));
             Set(shockwave, "endColor", new Color(1f, 0.93f, 0.2f, 1f));
             // 처음에 빠르게 퍼지고 끝으로 갈수록 느려지는 곡선
@@ -196,7 +219,7 @@ namespace Chopper.EditorTools
 
             GameObject go = NewObject(Path.GetFileNameWithoutExtension(path));
             go.layer = Layer(LayerEnemy);
-            go.transform.localScale = new Vector3(3f, 3f, 1f);
+            go.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
 
             AddKinematicBody(go);
             AddTriggerCircle(go, 0.06f, new Vector2(0.01f, 0f));
@@ -216,7 +239,7 @@ namespace Chopper.EditorTools
             Set(wasp, "flasher", flasher);
             Set(wasp, "flashOnHit", false);     // 1회 피격으로 처치되므로 점멸 없음(체력을 올리면 켤 수 있다)
             Set(wasp, "hitFlashMaterial", whiteMat);
-            Set(wasp, "deathEffectScale", 2.6f);
+            Set(wasp, "deathEffectScale", 2.08f);
 
             SavePrefab(go, path);
         }
@@ -227,7 +250,7 @@ namespace Chopper.EditorTools
 
             GameObject go = NewObject(Path.GetFileNameWithoutExtension(path));
             go.layer = Layer(LayerEnemy);
-            go.transform.localScale = new Vector3(3f, 3f, 1f);
+            go.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
 
             AddKinematicBody(go);
             AddTriggerCircle(go, 0.075f);
@@ -251,17 +274,34 @@ namespace Chopper.EditorTools
             Set(hornet, "flasher", flasher);
             Set(hornet, "flashOnHit", true);    // 피격되면 흰색 점멸
             Set(hornet, "hitFlashMaterial", whiteMat);
-            Set(hornet, "deathEffectScale", 3.2f);
+            Set(hornet, "deathEffectScale", 2.56f);
             Set(hornet, "bulletPrefab", Prefab<Bullet>(PfEnemyBullet));
+            Set(hornet, "muzzleOffset", new Vector2(-0.096f, 0f));
             Set(hornet, "idleFrames", idle);
             Set(hornet, "attackFrames", attack);
 
             SavePrefab(go, path);
         }
 
-        private static void BuildBoss(string path, Material whiteMat, Sprite[] muzzleFrames)
+        /// <summary>보스 처치 시 떨어지는 선체 파츠/잔해. 스프라이트는 생성 시점에 Boss가 지정한다.</summary>
+        private static void BuildBossWreck(string path)
         {
-            const float shipScale = 2f;
+            GameObject go = NewObject(Path.GetFileNameWithoutExtension(path));
+            go.transform.localScale = new Vector3(BossShipScale, BossShipScale, 1f);
+
+            SpriteRenderer renderer = AddSprite(go, Load<Sprite>(Ship6Dir + "Parts/" + Ship6DebrisParts[0]), SortGameplay, 16);
+
+            var wreck = go.AddComponent<WreckPiece>();
+            Set(wreck, "spriteRenderer", renderer);
+            Set(wreck, "gravity", 9f);
+            Set(wreck, "despawnMargin", 1.6f); // 선체 절반 크기의 파츠가 완전히 화면 밖으로 나갈 때까지 유지
+
+            SavePrefab(go, path);
+        }
+
+        private static void BuildBoss(string path, Material whiteMat, Material redMat, Sprite[] muzzleFrames)
+        {
+            const float shipScale = BossShipScale;
 
             GameObject root = NewObject(Path.GetFileNameWithoutExtension(path));
             root.layer = Layer(LayerEnemy);
@@ -272,7 +312,7 @@ namespace Chopper.EditorTools
             hull.direction = CapsuleDirection2D.Horizontal;
             hull.size = new Vector2(2.2f, 1.25f);
 
-            // 원본 아트(오른쪽을 향함) 그대로 배치하고, 방향 전환은 Visual의 X 스케일 반전으로 처리
+            // 원본 아트(오른쪽을 향함) 그대로 배치한다. 보스는 항상 오른쪽을 향한다
             GameObject visual = NewObject("Visual", root.transform);
             visual.transform.localScale = new Vector3(shipScale, shipScale, 1f);
 
@@ -308,6 +348,18 @@ namespace Chopper.EditorTools
             Set(boss, "bulletPrefab", Prefab<Bullet>(PfEnemyBullet));
             Set(boss, "anchorViewport", new Vector2(0.8f, 0.5f));
 
+            // 처치 연출(플레이어 사망 연출과 동일한 구성)
+            Set(boss, "deathFlashMaterial", redMat);
+            // 함선 밑변: Ship6.png(128px)에서 그림의 맨 아래 줄(y=100px) 바로 아래
+            Set(boss, "hullBottomY", (64f - 101f) / 100f * shipScale);
+            // explosion-4 프레임(128px)에서 폭발이 솟아오르는 밑동은 y≈120px
+            Set(boss, "blastBaseToCenter", (120.5f - 64f) / 100f * BossBlastScale);
+            Set(boss, "wreckPrefab", Prefab<WreckPiece>(PfWreckBoss));
+            var debris = new Sprite[Ship6DebrisParts.Length];
+            for (int i = 0; i < debris.Length; i++)
+                debris[i] = Load<Sprite>(Ship6Dir + "Parts/" + Ship6DebrisParts[i]);
+            Set(boss, "debrisSprites", debris);
+
             SavePrefab(root, path);
         }
 
@@ -339,16 +391,17 @@ namespace Chopper.EditorTools
         }
 
         /// <summary>발사 지점에 붙는 Muzzle Flash(Fx_03). 플레이어와 보스가 같은 구성을 사용한다.</summary>
-        private static SpriteAnimator BuildMuzzleFlash(Transform parent, Sprite[] frames, float scale)
+        private static SpriteAnimator BuildMuzzleFlash(Transform parent, Sprite[] frames, float scale,
+            string name = "MuzzleFlash", string sortingLayer = SortEffects, int sortingOrder = 10)
         {
-            GameObject pivot = NewObject("MuzzleFlash", parent);
+            GameObject pivot = NewObject(name, parent);
 
             GameObject spriteObject = NewObject("Sprite", pivot.transform);
             spriteObject.transform.localScale = new Vector3(scale, scale, 1f);
             // 불꽃의 밝은 중심(스프라이트 왼쪽 5px 지점)이 발사 지점에 오도록 오른쪽으로 민다
             spriteObject.transform.localPosition = new Vector3(0.05f * scale, 0f, 0f);
 
-            SpriteRenderer renderer = AddSprite(spriteObject, frames[0], SortEffects, 10);
+            SpriteRenderer renderer = AddSprite(spriteObject, frames[0], sortingLayer, sortingOrder);
             renderer.enabled = false;
 
             return AddAnimator(pivot, renderer, frames, 24f, loop: false, playOnEnable: false, endAction: AnimationEndAction.Hide);
@@ -358,7 +411,7 @@ namespace Chopper.EditorTools
         {
             GameObject go = NewObject(Path.GetFileNameWithoutExtension(path));
             go.layer = Layer(LayerItem);
-            go.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+            go.transform.localScale = new Vector3(1.35f, 1.35f, 1f);
 
             AddKinematicBody(go);
             AddTriggerCircle(go, 0.13f);
@@ -379,6 +432,7 @@ namespace Chopper.EditorTools
             SpriteRenderer renderer = AddSprite(go, animated ? animationFrames[0] : sprite, SortGameplay, 28);
 
             var wreck = go.AddComponent<WreckPiece>();
+            Set(wreck, "spriteRenderer", renderer);
             Set(wreck, "gravity", 9f);
 
             if (animated)
@@ -401,21 +455,32 @@ namespace Chopper.EditorTools
 
             AddKinematicBody(root);
             // 피격 판정: 캐빈(동체) 중심의 CircleCollider2D (월드 반지름 = 0.11 × PlayerScale)
-            CircleCollider2D hitCollider = AddTriggerCircle(root, 0.11f, new Vector2(0.12f, -0.02f));
+            CircleCollider2D hitCollider = AddTriggerCircle(root, 0.11f, Tilted(new Vector2(0.12f, -0.02f)));
 
+            // 헬리콥터 이미지는 앞으로 쏠리게 기울인다(이미지만 회전, 총알은 수평으로 발사)
             GameObject visual = NewObject("Visual", root.transform);
+            visual.transform.localRotation = Quaternion.Euler(0f, 0f, PlayerTilt);
             SpriteRenderer body = AddSprite(visual, frames[0], SortGameplay, 30);
-            AddAnimator(visual, body, frames, 30f, loop: true); // 빠른 Idle 애니메이션(로터 회전)
+            AddAnimator(visual, body, frames, 60f, loop: true); // 빠른 Idle 애니메이션(로터 회전)
             var flasher = visual.AddComponent<SpriteFlasher>();
             Set(flasher, "renderers", new[] { body });
 
-            // 헬리콥터의 문: 프레임 기준 (61, 21)px → 중심 기준 (+0.13, -0.05)
+            // 첫 번째 총알타입: 헬리콥터의 문. 프레임 기준 (61, 21)px → 중심 기준 (+0.14, -0.05)
             GameObject firePoint = NewObject("FirePoint", root.transform);
-            firePoint.transform.localPosition = new Vector3(0.14f, -0.05f, 0f);
+            firePoint.transform.localPosition = Tilted(new Vector2(0.14f, -0.05f));
+
+            // 두 번째 총알타입: 문 오른쪽 위 꼭짓점(66, 15)px에서 그은 수직선이 천장(지붕 외곽선, y=11px)과 만나는 위치
+            GameObject rifleFirePoint = NewObject("RifleFirePoint", root.transform);
+            rifleFirePoint.transform.localPosition = HelicopterPoint(66.5f, 11.5f);
 
             // 루트가 PlayerScale만큼 커지므로 월드 기준 2배가 되도록 보정
             SpriteAnimator muzzle = BuildMuzzleFlash(root.transform, muzzleFrames, 2f / PlayerScale);
             muzzle.transform.localPosition = firePoint.transform.localPosition;
+
+            // 두 번째 총알타입의 Muzzle Flash는 헬리콥터 이미지(정렬 순서 30) 뒤에 그린다
+            SpriteAnimator rifleMuzzle = BuildMuzzleFlash(root.transform, muzzleFrames, 2f / PlayerScale,
+                "RifleMuzzleFlash", SortGameplay, 29);
+            rifleMuzzle.transform.localPosition = rifleFirePoint.transform.localPosition;
 
             var health = root.AddComponent<PlayerHealth>();
             var controller = root.AddComponent<PlayerController>();
@@ -429,7 +494,7 @@ namespace Chopper.EditorTools
             Set(health, "hitFlashMaterial", whiteMat);
             Set(health, "reviveFlashMaterial", reviveMat);
             Set(health, "contactMask", Mask(LayerEnemy, LayerItem));
-            Set(health, "hitEffectScale", 1.3f);
+            Set(health, "hitEffectScale", 2.34f);
 
             Set(controller, "health", health);
             Set(controller, "paddingMin", new Vector2(0.8f, 0.35f));
@@ -439,6 +504,8 @@ namespace Chopper.EditorTools
             Set(weapon, "rifleBulletPrefab", Prefab<Bullet>(PfPlayerBulletRifle));
             Set(weapon, "firePoint", firePoint.transform);
             Set(weapon, "muzzleFlash", muzzle);
+            Set(weapon, "rifleFirePoint", rifleFirePoint.transform);
+            Set(weapon, "rifleMuzzleFlash", rifleMuzzle);
             Set(weapon, "health", health);
 
             Set(death, "visual", visual.transform);
@@ -448,12 +515,12 @@ namespace Chopper.EditorTools
             Set(death, "cabinPrefab", Prefab<WreckPiece>(PfWreckCabin));
             Set(death, "tailPrefab", Prefab<WreckPiece>(PfWreckTail));
             Set(death, "debrisPrefab", Prefab<WreckPiece>(PfWreckDoor));
-            Set(death, "cabinOffset", new Vector2(0.16f, 0f) * PlayerScale);
-            Set(death, "tailOffset", new Vector2(-0.17f, 0.03f) * PlayerScale);
-            Set(death, "shakeAmplitude", 0.1f);
+            Set(death, "cabinOffset", Tilted(new Vector2(0.16f, 0f)) * PlayerScale);
+            Set(death, "tailOffset", Tilted(new Vector2(-0.17f, 0.03f)) * PlayerScale);
+            Set(death, "shakeAmplitude", 0.08f);
             Set(death, "smallExplosionArea", new Vector2(0.6f, 0.28f));
             Set(death, "smallExplosionScale", new Vector2(1.2f, 2f));
-            Set(death, "bigExplosionScale", 1.1f);
+            Set(death, "bigExplosionScale", 0.55f);
 
             SavePrefab(root, path);
         }
@@ -507,19 +574,20 @@ namespace Chopper.EditorTools
                 // Gun3: 발사음을 방해하지 않을 정도의 낮은 볼륨으로 얹는다
                 Sfx(SoundId.GunLayer, "Gun3.mp3", 0.2f, 3, Steal, 0.03f, 0f, 0.07f),
                 Loop(SoundId.Chopper, "Chopper.mp3", 0.16f, 0.046f, 0.008f, 0.12f),
-                Sfx(SoundId.PlayerHurt, "Hurt2.mp3", 0.9f, 2, Steal, 0.08f, 0f, 0.025f),
+                Sfx(SoundId.PlayerHurt, "Hurt2.mp3", 0.63f, 2, Steal, 0.08f, 0f, 0.025f),
                 Sfx(SoundId.Revive, "Revive.mp3", 0.42f, 1, Steal, 0f, 0f, 0.04f),
                 Sfx(SoundId.Ricochet, "Ricochet.wav", 0.3f, 2, Skip, 0.07f, 0.1f),
                 Sfx(SoundId.BulletHit, "BulletHit.wav", 0.35f, 3, Steal, 0.035f, 0.08f),
                 Sfx(SoundId.ImminentExplosion, "ImminentExplosion.mp3", 0.57f, 1, Steal, 0f, 0f, 0.05f),
                 Sfx(SoundId.Charge, "Charge.mp3", 0.9f, 1, Steal, 0f, 0f, 0.045f),
-                Sfx(SoundId.SmallExplosion, "Hurt.wav", 0.7f, 4, Steal, 0.04f, 0.15f),
+                // 사망 연출 중 초당 15~30회 요청되므로 낮은 볼륨 + 최소 간격으로 솎아낸다
+                Sfx(SoundId.SmallExplosion, "Hurt.wav", 0.35f, 4, Steal, 0.04f, 0.15f),
                 Sfx(SoundId.Mayday, "Mayday.wav", 0.7f, 1, Steal, 0f, 0f),
                 Sfx(SoundId.BombExplosion, "BombExplosion.wav", 0.85f, 1, Steal, 0f, 0f),
                 Sfx(SoundId.BombExplosion2, "BombExplosion2.wav", 0.8f, 1, Steal, 0f, 0f),
 
                 // ── 아이템 ──
-                Sfx(SoundId.Reload, "Reload.mp3", 0.85f, 1, Steal, 0f, 0f, 0.075f),
+                Sfx(SoundId.Reload, "Reload.mp3", 0.595f, 1, Steal, 0f, 0f, 0.075f),
                 Sfx(SoundId.Blank, "Blank.wav", 0.7f, 2, Steal, 0.05f, 0f, 0.015f),
                 Sfx(SoundId.Blank2, "Blank2.mp3", 0.45f, 2, Steal, 0.05f, 0f, 0.045f),
                 Sfx(SoundId.Blank3, "Blank3.mp3", 0.3f, 2, Steal, 0.05f, 0f, 0.025f),
@@ -530,12 +598,12 @@ namespace Chopper.EditorTools
                 Sfx(SoundId.BoxExplosion, "BoxExplosion.wav", 1f, 4, Steal, 0.04f, 0.1f),
 
                 // ── 보스 ──
-                Sfx(SoundId.BossArrival, "BossArrival.mp3", 0.38f, 1, Steal, 0f, 0f, 0.05f),
-                Sfx(SoundId.BossSlowArrival, "BossSlowArrival.mp3", 0.28f, 1, Steal, 0f, 0f, 0.045f),
+                Sfx(SoundId.BossArrival, "BossArrival.mp3", 0.684f, 1, Steal, 0f, 0f, 0.05f),
+                Sfx(SoundId.BossSlowArrival, "BossSlowArrival.mp3", 0.504f, 1, Steal, 0f, 0f, 0.045f),
                 Loop(SoundId.BossEngine, "SpaceShip_Engine_Small_Loop_00.mp3", 1f, 0.051f, 0.044f, 0.15f),
-                // 패턴에 따라 초당 20회까지 요청되므로 최소 간격으로 솎아낸다
-                Sfx(SoundId.BossBullet, "BossBullet.mp3", 0.15f, 4, Steal, 0.045f, 0.05f, 0.035f),
-                Loop(SoundId.PortalIdle, "portal_idle.mp3", 0.2f, 0.1f, 0.009f, 0.25f),
+                // 패턴에 따라 초당 30회까지 요청되므로 최소 간격으로 솎아낸다
+                Sfx(SoundId.BossBullet, "BossBullet.mp3", 0.3f, 4, Steal, 0.045f, 0.05f, 0.035f),
+                Loop(SoundId.PortalIdle, "portal_idle.mp3", 0.4f, 0.1f, 0.009f, 0.25f),
                 Sfx(SoundId.Explosion4, "Explosion4.wav", 0.9f, 1, Steal, 0f, 0f),
                 // 대형 폭발 3개가 0.1초 간격으로 겹쳐 울리도록 동시 3개 허용
                 Sfx(SoundId.Explosion2, "Explosion2.wav", 0.58f, 3, Steal, 0f, 0.06f),

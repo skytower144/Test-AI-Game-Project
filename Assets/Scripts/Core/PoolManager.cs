@@ -134,6 +134,23 @@ namespace Chopper
             s_Instance.GetStack(pooled.SourcePrefab).Push(pooled);
         }
 
+        /// <summary>현재 사용 중인 모든 풀링 오브젝트를 풀에 반납한다(RETRY로 인게임을 초기화할 때 사용).</summary>
+        public static void DespawnAll()
+        {
+            if (s_Instance == null) return;
+
+            // 모든 인스턴스는 프리팹별 루트의 자식으로 만들어진다
+            foreach (Transform root in s_Instance.roots.Values)
+            {
+                if (root == null) continue;
+                for (int i = root.childCount - 1; i >= 0; i--)
+                {
+                    var pooled = root.GetChild(i).GetComponent<PooledObject>();
+                    if (pooled != null && !pooled.IsInPool) Despawn(pooled.gameObject);
+                }
+            }
+        }
+
         // ───────────── 내부 구현 ─────────────
 
         private PooledObject SpawnInternal(GameObject prefab, Vector3 position, Quaternion rotation)

@@ -2,9 +2,11 @@ using UnityEngine;
 
 namespace Chopper
 {
-    /// <summary>헬리콥터 폭발 후 중력으로 떨어지는 파츠/잔해.</summary>
+    /// <summary>헬리콥터/보스 폭발 후 중력으로 떨어지는 파츠/잔해.</summary>
     public sealed class WreckPiece : MonoBehaviour, IPoolable
     {
+        [Tooltip("표시할 스프라이트 렌더러(SetSprite로 스프라이트를 바꿀 때 사용)")]
+        [SerializeField] private SpriteRenderer spriteRenderer;
         [Tooltip("중력 가속도(유닛/초²)")]
         [SerializeField, Min(0f)] private float gravity = 9f;
         [Tooltip("화면 밖으로 이만큼 벗어나면 풀에 반납")]
@@ -34,6 +36,13 @@ namespace Chopper
         public void OnDespawned()
         {
             live = false;
+        }
+
+        /// <summary>표시할 스프라이트를 바꾼다(하나의 프리팹으로 여러 파츠를 표현할 때).</summary>
+        public void SetSprite(Sprite sprite)
+        {
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null) spriteRenderer.sprite = sprite;
         }
 
         /// <summary>초기 속도와 회전 속도(도/초)를 주고 날려 보낸다.</summary>

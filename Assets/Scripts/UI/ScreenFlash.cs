@@ -29,12 +29,20 @@ namespace Chopper
         {
             EventBus.Subscribe<ScreenFlashEvent>(OnScreenFlash);
             EventBus.Subscribe<BossBigExplosionEvent>(OnBossBigExplosion);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<ScreenFlashEvent>(OnScreenFlash);
             EventBus.Unsubscribe<BossBigExplosionEvent>(OnBossBigExplosion);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
+        }
+
+        private void OnGameReset(GameResetEvent evt)
+        {
+            active = false;
+            SetAlpha(0f);
         }
 
         private void OnScreenFlash(ScreenFlashEvent evt)

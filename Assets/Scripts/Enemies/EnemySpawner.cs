@@ -42,16 +42,29 @@ namespace Chopper
         {
             EventBus.Subscribe<BossSpawnedEvent>(OnBossSpawned);
             EventBus.Subscribe<BossDestroyedEvent>(OnBossDestroyed);
+            EventBus.Subscribe<GameResetEvent>(OnGameReset);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<BossSpawnedEvent>(OnBossSpawned);
             EventBus.Unsubscribe<BossDestroyedEvent>(OnBossDestroyed);
+            EventBus.Unsubscribe<GameResetEvent>(OnGameReset);
         }
 
         private void Start()
         {
+            ResetState();
+        }
+
+        private void OnGameReset(GameResetEvent evt)
+        {
+            ResetState();
+        }
+
+        private void ResetState()
+        {
+            bossActive = false;
             timer = startDelay;
             RollTargetCount();
         }
