@@ -21,7 +21,7 @@ namespace Chopper
         [Tooltip("헬리콥터 대폭발이 끝난 뒤 GAME OVER 표시까지의 시간(초)")]
         [SerializeField, Min(0f)] private float gameOverDelay = 1f;
         [Tooltip("GAME OVER 표시 후 결과 화면까지의 시간(초)")]
-        [SerializeField, Min(0f)] private float resultsDelay = 4f;
+        [SerializeField, Min(0f)] private float resultsDelay = 2f;
 
         [Header("Performance")]
         [Tooltip("VSync가 꺼져 있을 때 적용할 목표 프레임률(0 = 모니터 주사율)")]

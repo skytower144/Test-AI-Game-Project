@@ -10,7 +10,7 @@ namespace Chopper
     {
         [SerializeField] private ItemType itemType = ItemType.RifleAmmo;
         [Tooltip("왼쪽으로 떠밀려가는 속도(유닛/초)")]
-        [SerializeField, Min(0f)] private float driftSpeed = 1.1f;
+        [SerializeField, Min(0f)] private float driftSpeed = 2.75f;
         [Tooltip("드롭 직후 작게 나타났다가 원래 크기로 커지는 연출 시간(초)")]
         [SerializeField, Min(0f)] private float popDuration = 0.18f;
         [Tooltip("왼쪽 화면 밖으로 이만큼 벗어나면 제거")]

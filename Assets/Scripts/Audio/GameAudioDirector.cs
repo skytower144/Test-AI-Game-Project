@@ -11,6 +11,10 @@ namespace Chopper
         [Header("Ambient")]
         [SerializeField, Min(0f)] private float ambientFadeIn = 1.2f;
 
+        [Header("Gun")]
+        [Tooltip("두 번째 총알타입의 발사음을 늦추는 정도(발사 간격 대비 비율). 0.5 = 첫 번째 총알 소리 사이의 정확히 가운데")]
+        [SerializeField, Range(0f, 1f)] private float rifleSoundOffset = 0.5f;
+
         [Header("Chopper Loop")]
         [SerializeField, Min(0f)] private float chopperFadeIn = 0.25f;
         [Tooltip("체력 0 이후 대폭발까지 로터 소리의 피치가 떨어지는 최종값")]
@@ -107,10 +111,14 @@ namespace Chopper
 
         private void OnPlayerFired(PlayerFiredEvent evt)
         {
-            // Gun.wav: 첫 번째 총알타입, Gun2.mp3: 두 번째 총알타입
-            AudioManager.Play(evt.bulletType == BulletType.Rifle ? SoundId.Gun2 : SoundId.Gun);
-            // 발사음에 공통으로 얹는 낮은 볼륨의 소리(두 총알이 같은 순간에 발사되면 최소 간격 정책으로 한 번만 재생된다)
-            AudioManager.Play(SoundId.GunLayer);
+            // Gun.wav: 첫 번째 총알타입, Gun2.mp3: 두 번째 총알타입.
+            // 두 총알은 같은 순간에 발사되지만, 두 번째 총알의 소리는 발사 간격의 일부만큼 늦춰
+            // 두 총이 번갈아 가며 쏘는 것처럼 들리게 한다.
+            bool rifle = evt.bulletType == BulletType.Rifle;
+            float delay = rifle ? Mathf.Max(0f, evt.interval) * rifleSoundOffset : 0f;
+
+            AudioManager.Play(rifle ? SoundId.Gun2 : SoundId.Gun, 1f, delay);
+            AudioManager.Play(SoundId.GunLayer, 1f, delay); // 발사음에 공통으로 얹는 낮은 볼륨의 소리
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)

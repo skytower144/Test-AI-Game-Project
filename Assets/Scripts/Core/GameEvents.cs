@@ -41,7 +41,8 @@ namespace Chopper
 
     public struct PlayerHealthChangedEvent : IGameEvent { public int health; public int maxHealth; }
 
-    public struct PlayerFiredEvent : IGameEvent { public BulletType bulletType; }
+    /// <summary>총알 1발 발사. interval은 현재 발사 간격(초).</summary>
+    public struct PlayerFiredEvent : IGameEvent { public BulletType bulletType; public float interval; }
 
     /// <summary>피격(체력 감소) 순간.</summary>
     public struct PlayerDamagedEvent : IGameEvent { public int health; public Vector2 position; }

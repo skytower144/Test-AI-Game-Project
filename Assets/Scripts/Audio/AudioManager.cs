@@ -44,9 +44,17 @@ namespace Chopper
             public AudioSource Standby => sources[1 - active];
         }
 
+        private struct DelayedSound
+        {
+            public SoundId id;
+            public float volumeScale;
+            public float time; // 재생할 시각(Time.unscaledTime 기준)
+        }
+
         private static AudioManager s_Instance;
 
         private Voice[] voices;
+        private readonly List<DelayedSound> delayedSounds = new List<DelayedSound>(16);
         private readonly Dictionary<SoundId, float> lastPlayTimes = new Dictionary<SoundId, float>();
         private readonly Dictionary<SoundId, LoopChannel> loops = new Dictionary<SoundId, LoopChannel>();
         private readonly List<LoopChannel> loopList = new List<LoopChannel>();
@@ -101,10 +109,44 @@ namespace Chopper
 
         // ───────────── 효과음 ─────────────
 
-        /// <summary>효과음을 1회 재생한다. 중복재생 정책에 따라 무시되거나 기존 재생을 대체할 수 있다.</summary>
-        public static void Play(SoundId id, float volumeScale = 1f)
+        /// <summary>
+        /// 효과음을 1회 재생한다. 중복재생 정책에 따라 무시되거나 기존 재생을 대체할 수 있다.
+        /// delay(초)를 주면 그만큼 늦춰 재생한다(여러 소리를 엇박으로 배치할 때 사용).
+        /// </summary>
+        public static void Play(SoundId id, float volumeScale = 1f, float delay = 0f)
         {
-            if (s_Instance != null) s_Instance.PlayInternal(id, volumeScale);
+            if (s_Instance == null) return;
+
+            if (delay > 0f)
+            {
+                s_Instance.delayedSounds.Add(new DelayedSound
+                {
+                    id = id,
+                    volumeScale = volumeScale,
+                    time = Time.unscaledTime + delay,
+                });
+            }
+            else
+            {
+                s_Instance.PlayInternal(id, volumeScale);
+            }
+        }
+
+        // 예약된 효과음 중 재생 시각이 된 것을 재생한다.
+        private void UpdateDelayedSounds()
+        {
+            if (delayedSounds.Count == 0) return;
+
+            float now = Time.unscaledTime;
+            for (int i = 0; i < delayedSounds.Count; i++)
+            {
+                DelayedSound sound = delayedSounds[i];
+                if (sound.time > now) continue;
+
+                delayedSounds.RemoveAt(i);
+                i--;
+                PlayInternal(sound.id, sound.volumeScale);
+            }
         }
 
         private void PlayInternal(SoundId id, float volumeScale)
@@ -284,6 +326,8 @@ namespace Chopper
 
         private void Update()
         {
+            UpdateDelayedSounds();
+
             float dt = Time.unscaledDeltaTime;
             for (int i = 0; i < loopList.Count; i++)
             {

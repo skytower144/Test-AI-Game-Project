@@ -46,7 +46,7 @@ namespace Chopper.EditorTools
         private const float BossShipScale = 2f;
 
         /// <summary>보스 대형 폭발(explosion-4) 이펙트의 표시 배율.</summary>
-        private const float BossBlastScale = 1.25f;
+        private const float BossBlastScale = 1.5f;
 
         /// <summary>기울이기 전 헬리콥터 이미지 위의 좌표(중심 원점, 유닛)를 기울어진 이미지 위의 좌표로 옮긴다.</summary>
         private static Vector2 Tilted(Vector2 point)
@@ -518,7 +518,7 @@ namespace Chopper.EditorTools
             Set(death, "cabinOffset", Tilted(new Vector2(0.16f, 0f)) * PlayerScale);
             Set(death, "tailOffset", Tilted(new Vector2(-0.17f, 0.03f)) * PlayerScale);
             Set(death, "shakeAmplitude", 0.08f);
-            Set(death, "smallExplosionArea", new Vector2(0.6f, 0.28f));
+            Set(death, "smallExplosionRadius", 0.6f); // 꼬리부터 기수까지 몸통 전체를 포괄하는 원
             Set(death, "smallExplosionScale", new Vector2(1.2f, 2f));
             Set(death, "bigExplosionScale", 0.55f);
 

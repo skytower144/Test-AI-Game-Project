@@ -21,7 +21,9 @@ namespace Chopper
             [Tooltip("상하 왕복 횟수")] public int cycles = 2;
             [Tooltip("발사 간격(초)")] public float fireInterval = 0.75f;
             [Tooltip("한 번에 발사하는 총알 수")] public int bulletCount = 5;
-            [Tooltip("총알 사이 각도(도)")] public float spreadStep = 14f;
+            [Tooltip("총알 사이 각도(도). 작을수록 총알들이 오래 겹쳐 한 줄의 선처럼 보인다 " +
+                     "(3.4도 = 화면 절반쯤 날아갔을 때 이웃한 총알이 살짝 겹치는 정도)")]
+            public float spreadStep = 3.4f;
             public float bulletSpeed = 6.3f;
         }
 
@@ -31,7 +33,7 @@ namespace Chopper
             [Tooltip("위아래 왕복 횟수")] public int sweeps = 4;
             [Tooltip("왕복 1회에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float sweepPeriod = 0.61f;
             [Tooltip("위/아래로 꺾이는 최대 각도(도)")] public float sweepAngle = 55f;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.033f;
+            [Tooltip("연사 간격(초)")] public float fireInterval = 0.022f;
             public float bulletSpeed = 8.25f;
         }
 
@@ -40,7 +42,7 @@ namespace Chopper
         {
             [Tooltip("시계방향 회전 수")] public int revolutions = 3;
             [Tooltip("1회전에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float revolutionTime = 1.11f;
-            [Tooltip("연사 간격(초). 값이 클수록 탄 사이 틈이 넓어 회피가 쉽다")] public float fireInterval = 0.043f;
+            [Tooltip("연사 간격(초). 값이 클수록 탄 사이 틈이 넓어 회피가 쉽다")] public float fireInterval = 0.029f;
             public float bulletSpeed = 4.8f;
         }
 
@@ -62,8 +64,8 @@ namespace Chopper
         {
             [Tooltip("패턴 지속 시간(초)")] public float duration = 8f;
             [Tooltip("발사 방향 수(8 = 45도 간격)")] public int directions = 8;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.093f;
-            [Tooltip("발사 방향 전체가 도는 속도(도/초). 양수 = 시계 반대 방향, 음수 = 시계 방향")] public float rotationSpeed = 39.6f;
+            [Tooltip("연사 간격(초)")] public float fireInterval = 0.062f;
+            [Tooltip("발사 방향 전체가 도는 속도(도/초). 양수 = 시계 반대 방향, 음수 = 시계 방향")] public float rotationSpeed = 59.4f;
             public float bulletSpeed = 5.1f;
         }
 
@@ -95,9 +97,9 @@ namespace Chopper
         [Tooltip("가로지르는 동안의 Ease Out 세기. 1 = 등속, 클수록 처음이 빠르고 끝에서 느려진다")]
         [SerializeField, Min(1f)] private float flyByEase = 2f;
         [Tooltip("가로지른 뒤 다시 나타나기까지의 대기(초)")]
-        [SerializeField, Min(0f)] private float flyByPause = 0.47f;
-        [Tooltip("오른쪽 끝에서 모습을 드러내는 시간(초)")]
-        [SerializeField, Min(0.1f)] private float revealDuration = 1.73f;
+        [SerializeField, Min(0f)] private float flyByPause = 0.7f;
+        [Tooltip("오른쪽 끝에서 천천히 모습을 드러내는 시간(초)")]
+        [SerializeField, Min(0.1f)] private float revealDuration = 2.6f;
         [Tooltip("모습을 드러내는 동안의 Ease Out 세기. 1 = 등속, 클수록 처음이 빠르고 끝에서 느려진다")]
         [SerializeField, Min(1f)] private float revealEase = 3f;
         [Tooltip("화면 밖 대기 위치까지의 여유 거리(유닛)")]
@@ -143,7 +145,9 @@ namespace Chopper
         [Tooltip("소규모 폭발 생성 간격 범위(초). 처치 직후(처음)부터 대폭발까지 계속 생성한다")]
         [SerializeField] private Vector2 deathSmallExplosionInterval = new Vector2(0.03f, 0.075f);
         [SerializeField] private Vector2 deathSmallExplosionScale = new Vector2(1.6f, 2.8f);
-        [Tooltip("소규모 폭발이 생성되는 영역(중심 기준 반크기)")]
+        [Tooltip("소규모 폭발이 생성되는 원의 반지름(유닛). 선체 전체를 포괄하는 크기")]
+        [SerializeField, Min(0f)] private float deathSmallExplosionRadius = 1.2f;
+        [Tooltip("잔해가 튀어나오는 영역(중심 기준 반크기)")]
         [SerializeField] private Vector2 hullHalfExtents = new Vector2(1.05f, 0.6f);
 
         [Header("Death 3) Big Explosion")]
@@ -617,9 +621,8 @@ namespace Chopper
                 if (nextExplosion <= 0f)
                 {
                     nextExplosion = UnityEngine.Random.Range(deathSmallExplosionInterval.x, deathSmallExplosionInterval.y);
-                    Vector2 point = (Vector2)transform.position + new Vector2(
-                        UnityEngine.Random.Range(-hullHalfExtents.x, hullHalfExtents.x),
-                        UnityEngine.Random.Range(-hullHalfExtents.y, hullHalfExtents.y));
+                    // 선체를 포괄하는 원 안의 임의 지점
+                    Vector2 point = (Vector2)transform.position + UnityEngine.Random.insideUnitCircle * deathSmallExplosionRadius;
                     VfxManager.Spawn(VfxId.SmallExplosion, point,
                         UnityEngine.Random.Range(deathSmallExplosionScale.x, deathSmallExplosionScale.y));
                     EventBus.Publish(new SmallExplosionEvent { position = point });

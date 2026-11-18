@@ -590,31 +590,84 @@ namespace Chopper.EditorTools
                 rows[i] = new ResultsPanel.Row { root = row, nameText = nameText, scoreText = scoreText };
             }
 
-            // 하단 중앙: RETRY / QUIT 아이콘과 이름
-            RectTransform retry = BuildResultsButton(root, font, "Retry Button", Load<Sprite>(RestartTex), "RETRY", -150f);
-            RectTransform quit = BuildResultsButton(root, font, "Quit Button", Load<Sprite>(CloseTex), "QUIT", 150f);
+            // 하단 중앙: RETRY / QUIT 아이콘과 이름. 두 아이콘 사이 간격은 아이콘 너비의 0.8배.
+            // 스프라이트의 투명 여백을 빼고, 실제로 보이는 그림 기준으로 간격을 맞춘다.
+            const float buttonSize = 0.6f;              // 아이콘과 이름의 크기 배율
+            const float iconHeight = 110f * buttonSize;
+            Sprite retrySprite = Load<Sprite>(RestartTex);
+            Sprite quitSprite = Load<Sprite>(CloseTex);
+            Rect retryVisible = VisibleRect(retrySprite, iconHeight); // 아이콘 중심 기준, 캔버스 단위
+            Rect quitVisible = VisibleRect(quitSprite, iconHeight);
+            float iconGap = (retryVisible.width + quitVisible.width) * 0.5f * 0.8f;
+
+            // 보이는 그림의 안쪽 가장자리가 가운데(x = 0)에서 각각 간격의 절반만큼 떨어지도록 배치
+            float retryX = -iconGap * 0.5f - retryVisible.xMax;
+            float quitX = iconGap * 0.5f - quitVisible.xMin;
+
+            // 클릭 영역은 가운데에서 맞닿고 겹치지 않는다
+            RectTransform retry = BuildResultsButton(root, font, "Retry Button", retrySprite, "RETRY", buttonSize, iconHeight, -retryX * 2f);
+            RectTransform quit = BuildResultsButton(root, font, "Quit Button", quitSprite, "QUIT", buttonSize, iconHeight, quitX * 2f);
             retry.anchorMin = retry.anchorMax = bottom;
             quit.anchorMin = quit.anchorMax = bottom;
-            retry.anchoredPosition = new Vector2(-150f, 168f);
-            quit.anchoredPosition = new Vector2(150f, 168f);
+            retry.anchoredPosition = new Vector2(retryX, 168f);
+            quit.anchoredPosition = new Vector2(quitX, 168f);
 
             return new ResultsBuild { root = panel.gameObject, group = group, rows = rows, retry = retry, quit = quit };
         }
 
-        private static RectTransform BuildResultsButton(Transform parent, TMP_FontAsset font, string name,
-            Sprite iconSprite, string label, float x)
+        /// <summary>
+        /// 스프라이트를 높이 displayHeight로 표시했을 때 실제로 보이는(불투명한) 그림의 영역.
+        /// 스프라이트 중심을 원점으로 하는 표시 단위 좌표로 돌려준다.
+        /// </summary>
+        private static Rect VisibleRect(Sprite sprite, float displayHeight)
         {
-            // 아이콘과 이름의 크기 배율
-            const float size = 0.6f;
+            Rect rect = sprite.rect;
+            float scale = displayHeight / rect.height;
 
+            // 임포트된 텍스처는 읽기 전용이므로 원본 이미지 파일을 직접 읽어 알파를 확인한다
+            var source = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                source.LoadImage(System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(sprite.texture)));
+                Color32[] pixels = source.GetPixels32();
+
+                int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+                int x0 = Mathf.RoundToInt(rect.x), y0 = Mathf.RoundToInt(rect.y);
+                int w = Mathf.RoundToInt(rect.width), h = Mathf.RoundToInt(rect.height);
+                for (int y = 0; y < h && y0 + y < source.height; y++)
+                {
+                    for (int x = 0; x < w && x0 + x < source.width; x++)
+                    {
+                        if (pixels[(y0 + y) * source.width + x0 + x].a <= 8) continue;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+
+                if (maxX < minX) return new Rect(-w * scale * 0.5f, -h * scale * 0.5f, w * scale, h * scale);
+
+                // (이 클래스에 Rect(Component) 헬퍼가 있어 타입 이름을 명시한다)
+                return UnityEngine.Rect.MinMaxRect(
+                    (minX - w * 0.5f) * scale, (minY - h * 0.5f) * scale,
+                    (maxX + 1 - w * 0.5f) * scale, (maxY + 1 - h * 0.5f) * scale);
+            }
+            finally
+            {
+                Object.DestroyImmediate(source);
+            }
+        }
+
+        private static RectTransform BuildResultsButton(Transform parent, TMP_FontAsset font, string name,
+            Sprite iconSprite, string label, float size, float iconHeight, float width)
+        {
             GameObject button = NewUI(name, parent);
             var rect = (RectTransform)button.transform;
             rect.pivot = Center;
-            rect.sizeDelta = new Vector2(220f, 200f) * size;
-            rect.anchoredPosition = new Vector2(x, 0f);
+            rect.sizeDelta = new Vector2(width, 200f * size);
 
             // 아이콘: 원본 비율을 유지
-            const float iconHeight = 110f * size;
             float aspect = iconSprite.rect.width / iconSprite.rect.height;
             Image icon = NewImage("Icon", button.transform, iconSprite, Color.white);
             icon.preserveAspect = true;
@@ -622,7 +675,7 @@ namespace Chopper.EditorTools
 
             // 아이콘 아래 이름
             TextMeshProUGUI text = NewText("Label", button.transform, font, label, 34f * size, UiGreen, TextAlignmentOptions.Capline, false);
-            Place(Rect(text), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f * size), new Vector2(220f, 50f * size));
+            Place(Rect(text), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f * size), new Vector2(width, 50f * size));
 
             return rect;
         }

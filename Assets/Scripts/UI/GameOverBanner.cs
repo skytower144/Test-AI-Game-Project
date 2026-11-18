@@ -15,7 +15,7 @@ namespace Chopper
         [Tooltip("깜박일 때 켜고 끄는 텍스트(또는 그래픽)")]
         [SerializeField] private Behaviour revivePromptGraphic;
         [Tooltip("부활 안내 문구가 깜박이는 간격(초). 이 시간마다 한 번씩 꺼졌다 켜진다")]
-        [SerializeField, Min(0.05f)] private float promptBlinkInterval = 0.8f;
+        [SerializeField, Min(0.05f)] private float promptBlinkInterval = 1.5f;
 
         private float promptTimer;
 

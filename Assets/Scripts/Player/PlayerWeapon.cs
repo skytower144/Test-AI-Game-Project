@@ -94,7 +94,7 @@ namespace Chopper
                 Shoot(rifleBulletPrefab, rifleFirePoint, rifleMuzzleFlash, BulletType.Rifle, overdue);
         }
 
-        private static void Shoot(Bullet prefab, Transform origin, SpriteAnimator flash, BulletType type, float overdue)
+        private void Shoot(Bullet prefab, Transform origin, SpriteAnimator flash, BulletType type, float overdue)
         {
             if (prefab == null || origin == null) return;
 
@@ -102,7 +102,7 @@ namespace Chopper
             if (bullet != null) bullet.Launch(Vector2.right, 0f, overdue);
 
             if (flash != null) flash.Play();
-            EventBus.Publish(new PlayerFiredEvent { bulletType = type });
+            EventBus.Publish(new PlayerFiredEvent { bulletType = type, interval = fireInterval });
         }
 
         private void OnItemPicked(ItemPickedEvent evt)

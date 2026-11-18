@@ -30,8 +30,8 @@ namespace Chopper
         [SerializeField, Min(0f)] private float smallExplosionDuration = 1f;
         [Tooltip("소규모 폭발 생성 간격 범위(초)")]
         [SerializeField] private Vector2 smallExplosionInterval = new Vector2(0.035f, 0.1f);
-        [Tooltip("소규모 폭발이 생성되는 영역(중심 기준 반크기)")]
-        [SerializeField] private Vector2 smallExplosionArea = new Vector2(0.45f, 0.22f);
+        [Tooltip("소규모 폭발이 생성되는 원의 반지름(유닛). 헬리콥터 몸통 전체를 포괄하는 크기")]
+        [SerializeField, Min(0f)] private float smallExplosionRadius = 0.6f;
         [SerializeField] private Vector2 smallExplosionScale = new Vector2(0.9f, 1.6f);
 
         [Header("3) Big Explosion")]
@@ -133,9 +133,8 @@ namespace Chopper
                 if (next <= 0f)
                 {
                     next = Random.Range(smallExplosionInterval.x, smallExplosionInterval.y);
-                    Vector2 point = (Vector2)transform.position + new Vector2(
-                        Random.Range(-smallExplosionArea.x, smallExplosionArea.x),
-                        Random.Range(-smallExplosionArea.y, smallExplosionArea.y));
+                    // 헬리콥터 몸통을 포괄하는 원 안의 임의 지점
+                    Vector2 point = (Vector2)transform.position + Random.insideUnitCircle * smallExplosionRadius;
                     VfxManager.Spawn(VfxId.SmallExplosion, point, Random.Range(smallExplosionScale.x, smallExplosionScale.y));
                     EventBus.Publish(new SmallExplosionEvent { position = point });
                 }

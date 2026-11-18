@@ -214,8 +214,8 @@ MonoBehaviour:
   bulletPrefab: {fileID: 1024460434912057625, guid: 121eb679f4f31d641a12a32e11898021, type: 3}
   flyBySpeed: 24
   flyByEase: 2
-  flyByPause: 0.47
-  revealDuration: 1.73
+  flyByPause: 0.7
+  revealDuration: 2.6
   revealEase: 3
   offscreenMargin: 2.4
   anchorViewport: {x: 0.8, y: 0.5}
@@ -231,18 +231,18 @@ MonoBehaviour:
     cycles: 2
     fireInterval: 0.75
     bulletCount: 5
-    spreadStep: 14
+    spreadStep: 3.4
     bulletSpeed: 6.3
   pattern2:
     sweeps: 4
     sweepPeriod: 0.61
     sweepAngle: 55
-    fireInterval: 0.033
+    fireInterval: 0.022
     bulletSpeed: 8.25
   pattern3:
     revolutions: 3
     revolutionTime: 1.11
-    fireInterval: 0.043
+    fireInterval: 0.029
     bulletSpeed: 4.8
   pattern4:
     volleys: 3
@@ -256,8 +256,8 @@ MonoBehaviour:
   pattern5:
     duration: 8
     directions: 8
-    fireInterval: 0.093
-    rotationSpeed: 39.6
+    fireInterval: 0.062
+    rotationSpeed: 59.4
     bulletSpeed: 5.1
   hitFlashInterval: 0.05
   deathFlashMaterial: {fileID: 2100000, guid: 0627c2de969117a4eae64a99e372e792, type: 2}
@@ -268,13 +268,14 @@ MonoBehaviour:
   deathStillDuration: 1
   deathSmallExplosionInterval: {x: 0.03, y: 0.075}
   deathSmallExplosionScale: {x: 1.6, y: 2.8}
+  deathSmallExplosionRadius: 1.2
   hullHalfExtents: {x: 1.05, y: 0.6}
   blastCount: 3
   blastInterval: 0.1
   blastSpread: 0.85
   blastScale: 1
   hullBottomY: -0.74
-  blastBaseToCenter: 0.70625
+  blastBaseToCenter: 0.84749997
   wreckPrefab: {fileID: 4650282492972455146, guid: 40f29e16980e6054d81b8e59f35d84cc, type: 3}
   hullSplit: 0.5
   rearPartVelocity: {x: -1.4, y: 2.4}

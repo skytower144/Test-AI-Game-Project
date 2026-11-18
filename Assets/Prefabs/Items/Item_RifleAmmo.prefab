@@ -171,7 +171,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Chopper.ItemPickup
   itemType: 0
-  driftSpeed: 1.1
+  driftSpeed: 2.75
   popDuration: 0.18
   despawnMargin: 0.5
   verticalPadding: 0.3

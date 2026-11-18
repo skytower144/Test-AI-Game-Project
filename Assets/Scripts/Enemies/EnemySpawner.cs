@@ -19,7 +19,7 @@ namespace Chopper
         [SerializeField, Min(0f)] private float waspWeight = 3f;
         [SerializeField, Min(0f)] private float hornetWeight = 1f;
         [Tooltip("몬스터가 부족할 때 다음 스폰까지의 간격 범위(초)")]
-        [SerializeField] private Vector2 spawnIntervalRange = new Vector2(0.25f, 0.6f);
+        [SerializeField] private Vector2 spawnIntervalRange = new Vector2(0.15f, 0.4f);
         [Tooltip("게임 시작 후 첫 스폰까지의 지연(초). 진입 연출(검은색 바)이 끝난 뒤 등장하도록 한다")]
         [SerializeField, Min(0f)] private float startDelay = 2.6f;
 
