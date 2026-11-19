@@ -14,7 +14,8 @@ namespace Chopper
         [SerializeField] private Sprite[] turboFrames;
         [SerializeField] private Sprite[] normalFrames;
         [SerializeField] private Sprite[] weakFrames;
-        [SerializeField, Min(0.01f)] private float framesPerSecond = 14f;
+        [Tooltip("불꽃(보스 Idle) 애니메이션 속도(FPS)")]
+        [SerializeField, Min(0.01f)] private float framesPerSecond = 21f;
         [SerializeField] private BoosterLevel initialLevel = BoosterLevel.Normal;
 
         private BoosterLevel level;

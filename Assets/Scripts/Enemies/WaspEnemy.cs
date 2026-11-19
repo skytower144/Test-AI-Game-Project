@@ -7,11 +7,11 @@ namespace Chopper
     {
         [Header("Wasp Movement")]
         [Tooltip("왼쪽으로 이동하는 속도 범위(유닛/초)")]
-        [SerializeField] private Vector2 speedRange = new Vector2(3.9f, 6.9f);
-        [Tooltip("사인파 진폭 범위(유닛)")]
-        [SerializeField] private Vector2 amplitudeRange = new Vector2(0.25f, 0.85f);
-        [Tooltip("사인파 각속도 범위(라디안/초). 이동 속도를 바꿀 때 같은 비율로 바꾸면 궤도 모양이 유지된다")]
-        [SerializeField] private Vector2 frequencyRange = new Vector2(3.2f, 7.2f);
+        [SerializeField] private Vector2 speedRange = new Vector2(5.85f, 7.245f);
+        [Tooltip("사인파 진폭 범위(유닛). 이동 궤도의 위아래 폭")]
+        [SerializeField] private Vector2 amplitudeRange = new Vector2(0.375f, 1.275f);
+        [Tooltip("사인파 파장 범위(유닛). 위아래로 한 번 왕복하는 동안 가로로 이동하는 거리. 클수록 완만한 궤도")]
+        [SerializeField] private Vector2 wavelengthRange = new Vector2(10f, 23f);
         [Tooltip("화면 위/아래 가장자리와 유지할 여백")]
         [SerializeField, Min(0f)] private float verticalPadding = 0.25f;
 
@@ -26,7 +26,9 @@ namespace Chopper
         {
             speed = Random.Range(speedRange.x, speedRange.y);
             amplitude = Random.Range(amplitudeRange.x, amplitudeRange.y);
-            frequency = Random.Range(frequencyRange.x, frequencyRange.y);
+            // 궤도 모양(진폭, 파장)은 이동 속도와 무관하게 정해지고, 속도는 그 궤도를 지나가는 빠르기만 바꾼다
+            float wavelength = Mathf.Max(0.1f, Random.Range(wavelengthRange.x, wavelengthRange.y));
+            frequency = Mathf.PI * 2f * speed / wavelength;
             phase = Random.Range(0f, Mathf.PI * 2f);
             elapsed = 0f;
 

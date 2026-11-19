@@ -70,7 +70,9 @@ namespace Chopper
     {
         public SoundId id = SoundId.None;
         public AudioClip clip;
-        [Range(0f, 1f)] public float volume = 1f;
+        [Tooltip("볼륨. 효과음은 1을 넘기면 같은 소리를 여러 보이스로 겹쳐 재생해 그만큼 키운다(루프는 1까지). " +
+                 "여러 소리가 겹쳐 출력 한계를 넘으면 소리가 눌리거나 찌그러질 수 있다")]
+        [Range(0f, 3f)] public float volume = 1f;
         [Tooltip("재생할 때마다 이 범위에서 피치를 무작위로 선택")]
         public Vector2 pitchRange = Vector2.one;
 

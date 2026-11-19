@@ -224,8 +224,8 @@ namespace Chopper.EditorTools
                 Prewarm(PfFxPlayerHit, 4),
                 Prewarm(PfFxBossBlast, 3),
                 Prewarm(PfFxShockwave, 2),
-                Prewarm(PfWasp, 8),
-                Prewarm(PfHornet, 4),
+                Prewarm(PfWasp, 18),
+                Prewarm(PfHornet, 10),
                 Prewarm(PfBoss, 1),
                 Prewarm(PfWreckBoss, 8),
                 Prewarm(PfItemRifle, 4),
@@ -264,9 +264,9 @@ namespace Chopper.EditorTools
             var dropper = NewObject("ItemDropper", systems.transform).AddComponent<ItemDropper>();
             Set(dropper, "drops", new[]
             {
-                new ItemDropper.DropEntry { type = ItemType.RifleAmmo, prefab = Prefab<ItemPickup>(PfItemRifle), chance = 0.4f },
-                new ItemDropper.DropEntry { type = ItemType.ShotgunAmmo, prefab = Prefab<ItemPickup>(PfItemShotgun), chance = 0.2f },
-                new ItemDropper.DropEntry { type = ItemType.Medkit, prefab = Prefab<ItemPickup>(PfItemMedkit), chance = 0.1f },
+                new ItemDropper.DropEntry { type = ItemType.RifleAmmo, prefab = Prefab<ItemPickup>(PfItemRifle), chance = 0.1f },
+                new ItemDropper.DropEntry { type = ItemType.ShotgunAmmo, prefab = Prefab<ItemPickup>(PfItemShotgun), chance = 0.05f },
+                new ItemDropper.DropEntry { type = ItemType.Medkit, prefab = Prefab<ItemPickup>(PfItemMedkit), chance = 0.03f },
             });
 
             // ── 배경(화면 위쪽 절반): 번개 + 잔해 ──

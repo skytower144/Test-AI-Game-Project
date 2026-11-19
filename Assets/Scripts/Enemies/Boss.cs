@@ -24,17 +24,15 @@ namespace Chopper
             [Tooltip("총알 사이 각도(도). 작을수록 총알들이 오래 겹쳐 한 줄의 선처럼 보인다 " +
                      "(3.4도 = 화면 절반쯤 날아갔을 때 이웃한 총알이 살짝 겹치는 정도)")]
             public float spreadStep = 3.4f;
-            public float bulletSpeed = 6.3f;
         }
 
         [Serializable]
         public class SweepPattern // 7.2
         {
             [Tooltip("위아래 왕복 횟수")] public int sweeps = 4;
-            [Tooltip("왕복 1회에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float sweepPeriod = 0.61f;
+            [Tooltip("왕복 1회에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float sweepPeriod = 0.4413f;
             [Tooltip("위/아래로 꺾이는 최대 각도(도)")] public float sweepAngle = 55f;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.022f;
-            public float bulletSpeed = 8.25f;
+            [Tooltip("연사 간격(초)")] public float fireInterval = 0.0147f;
         }
 
         [Serializable]
@@ -43,7 +41,6 @@ namespace Chopper
             [Tooltip("시계방향 회전 수")] public int revolutions = 3;
             [Tooltip("1회전에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float revolutionTime = 1.11f;
             [Tooltip("연사 간격(초). 값이 클수록 탄 사이 틈이 넓어 회피가 쉽다")] public float fireInterval = 0.029f;
-            public float bulletSpeed = 4.8f;
         }
 
         [Serializable]
@@ -52,7 +49,6 @@ namespace Chopper
             [Tooltip("단발 발사 반복 횟수")] public int volleys = 3;
             [Tooltip("단발 발사 간격(초)")] public float volleyInterval = 0.8f;
             [Tooltip("한 번에 전방위로 발사하는 총알 수")] public int bulletsPerVolley = 24;
-            public float bulletSpeed = 4.8f;
             [Tooltip("좌우 이동 폭(유닛)")] public float moveAmplitude = 1.2f;
             [Tooltip("좌우 왕복 1회에 걸리는 시간(초)")] public float movePeriod = 1.6f;
             [Tooltip("첫 발사 전 대기(초)")] public float leadTime = 0.4f;
@@ -64,9 +60,8 @@ namespace Chopper
         {
             [Tooltip("패턴 지속 시간(초)")] public float duration = 8f;
             [Tooltip("발사 방향 수(8 = 45도 간격)")] public int directions = 8;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.062f;
-            [Tooltip("발사 방향 전체가 도는 속도(도/초). 양수 = 시계 반대 방향, 음수 = 시계 방향")] public float rotationSpeed = 59.4f;
-            public float bulletSpeed = 5.1f;
+            [Tooltip("연사 간격(초)")] public float fireInterval = 0.0517f;
+            [Tooltip("발사 방향 전체가 도는 속도(도/초). 양수 = 시계 반대 방향, 음수 = 시계 방향")] public float rotationSpeed = 47.52f;
         }
 
         private enum State { Inactive, FlyBy, Reveal, Fighting, Halted, Dying }
@@ -93,13 +88,13 @@ namespace Chopper
 
         [Header("Entrance")]
         [Tooltip("화면을 왼쪽에서 오른쪽으로 가로지르는 평균 속도(유닛/초)")]
-        [SerializeField, Min(0.1f)] private float flyBySpeed = 24f;
+        [SerializeField, Min(0.1f)] private float flyBySpeed = 16.8f;
         [Tooltip("가로지르는 동안의 Ease Out 세기. 1 = 등속, 클수록 처음이 빠르고 끝에서 느려진다")]
         [SerializeField, Min(1f)] private float flyByEase = 2f;
         [Tooltip("가로지른 뒤 다시 나타나기까지의 대기(초)")]
-        [SerializeField, Min(0f)] private float flyByPause = 0.7f;
+        [SerializeField, Min(0f)] private float flyByPause = 1.7f;
         [Tooltip("오른쪽 끝에서 천천히 모습을 드러내는 시간(초)")]
-        [SerializeField, Min(0.1f)] private float revealDuration = 2.6f;
+        [SerializeField, Min(0.1f)] private float revealDuration = 3.25f;
         [Tooltip("모습을 드러내는 동안의 Ease Out 세기. 1 = 등속, 클수록 처음이 빠르고 끝에서 느려진다")]
         [SerializeField, Min(1f)] private float revealEase = 3f;
         [Tooltip("화면 밖 대기 위치까지의 여유 거리(유닛)")]
@@ -113,12 +108,16 @@ namespace Chopper
         [Tooltip("패턴 사이 대기 시간 범위(초)")]
         [SerializeField] private Vector2 patternWaitRange = new Vector2(3f, 4f);
         [SerializeField, Min(0.01f)] private float moveSmoothTime = 0.3f;
+        [Tooltip("제자리에서 위아래로 떠 있는 Idle 움직임의 폭(유닛)")]
         [SerializeField, Min(0f)] private float hoverAmplitude = 0.1f;
-        [SerializeField, Min(0f)] private float hoverFrequency = 1.8f;
+        [Tooltip("Idle 움직임의 빠르기(라디안/초)")]
+        [SerializeField, Min(0f)] private float hoverFrequency = 2.7f;
         [Tooltip("화면 위/아래 가장자리와 유지할 여백(유닛)")]
         [SerializeField, Min(0f)] private float verticalPadding = 0.85f;
 
         [Header("Patterns")]
+        [Tooltip("모든 패턴 공통 총알 속도(유닛/초). Hornet의 총알 속도도 같은 값으로 맞춘다")]
+        [SerializeField, Min(0.1f)] private float bulletSpeed = 7.2f;
         [SerializeField] private FanPattern pattern1 = new FanPattern();
         [SerializeField] private SweepPattern pattern2 = new SweepPattern();
         [SerializeField] private SpiralPattern pattern3 = new SpiralPattern();
@@ -132,16 +131,16 @@ namespace Chopper
         [SerializeField] private Material deathFlashMaterial;
         [Tooltip("빨강 점멸 간격(초)")]
         [SerializeField, Min(0.01f)] private float deathFlashInterval = 0.05f;
-        [Tooltip("처치 직후 제자리에서 심하게 흔들리는 시간(초)")]
+        [Tooltip("처치 직후 제자리에서 흔들리는 시간(초). 흔들림은 이 시간 동안 점점 약해지다 멈춘다(Fade Out)")]
         [SerializeField, Min(0f)] private float deathShakeDuration = 1f;
-        [Tooltip("흔들림 반경(유닛)")]
+        [Tooltip("흔들림이 시작될 때의 반경(유닛)")]
         [SerializeField, Min(0f)] private float deathShakeAmplitude = 0.08f;
         [Tooltip("초당 흔들림 횟수")]
         [SerializeField, Min(1f)] private float deathShakeFrequency = 50f;
 
         [Header("Death 2) Small Explosions")]
-        [Tooltip("흔들림이 멈춘 뒤 대폭발까지의 시간(초). 빨강 점멸은 계속된다")]
-        [SerializeField, Min(0f)] private float deathStillDuration = 1f;
+        [Tooltip("흔들림이 멈춘 뒤 대폭발까지의 대기 시간(초). 빨강 점멸은 계속된다")]
+        [SerializeField, Min(0f)] private float deathStillDuration = 1.3f;
         [Tooltip("소규모 폭발 생성 간격 범위(초). 처치 직후(처음)부터 대폭발까지 계속 생성한다")]
         [SerializeField] private Vector2 deathSmallExplosionInterval = new Vector2(0.03f, 0.075f);
         [SerializeField] private Vector2 deathSmallExplosionScale = new Vector2(1.6f, 2.8f);
@@ -194,6 +193,7 @@ namespace Chopper
         private Vector2 patternOffset;
         private Vector2 velocity;
         private Vector3 visualBasePosition;
+        private Coroutine entranceRoutine;
         private Coroutine fightRoutine;
         private Sprite rearHullSprite;
         private Sprite frontHullSprite;
@@ -234,6 +234,7 @@ namespace Chopper
         public void OnSpawned()
         {
             StopAllCoroutines();
+            entranceRoutine = null;
             fightRoutine = null;
             activePattern = -1;
             halted = false;
@@ -246,12 +247,13 @@ namespace Chopper
             if (flasher != null) flasher.Stop();
             if (muzzleFlash != null && muzzleFlash.Target != null) muzzleFlash.Target.enabled = false;
 
-            StartCoroutine(EntranceRoutine());
+            entranceRoutine = StartCoroutine(EntranceRoutine());
         }
 
         public void OnDespawned()
         {
             StopAllCoroutines();
+            entranceRoutine = null;
             fightRoutine = null;
             EndActivePattern();
             state = State.Inactive;
@@ -262,8 +264,9 @@ namespace Chopper
         private IEnumerator EntranceRoutine()
         {
             // 1) 화면 왼쪽 밖 → 오른쪽 밖으로 빠르게 통과(처음이 가장 빠르고 지나가며 감속)
+            //    등장 연출 중에도 플레이어 총알에 피격된다.
             state = State.FlyBy;
-            SetColliders(false);
+            SetColliders(true);
             SetBoosters(BoosterLevel.Turbo);
 
             float y = Anchor.y;
@@ -303,6 +306,7 @@ namespace Chopper
 
             velocity = Vector2.zero;
             patternOffset = Vector2.zero;
+            entranceRoutine = null;
 
             if (halted)
             {
@@ -390,7 +394,7 @@ namespace Chopper
                     float aim = AimAngle();
                     int count = Mathf.Max(1, cfg.bulletCount);
                     for (int i = 0; i < count; i++)
-                        FireBullet(aim + (i - (count - 1) * 0.5f) * cfg.spreadStep, cfg.bulletSpeed, 0f);
+                        FireBullet(aim + (i - (count - 1) * 0.5f) * cfg.spreadStep, bulletSpeed, 0f);
                     FireFeedback(aim);
                 }
                 yield return null;
@@ -420,7 +424,7 @@ namespace Chopper
                     float shotTime = t - accumulator;
                     if (shotTime > duration) break;
                     lastAngle = 180f - cfg.sweepAngle * Mathf.Sin(shotTime / period * Mathf.PI * 2f);
-                    FireBullet(lastAngle, cfg.bulletSpeed, accumulator);
+                    FireBullet(lastAngle, bulletSpeed, accumulator);
                     fired = true;
                 }
                 if (fired) FireFeedback(lastAngle);
@@ -451,7 +455,7 @@ namespace Chopper
                     float shotTime = Mathf.Max(0f, t - accumulator);
                     if (shotTime > duration) break;
                     lastAngle = 90f - 360f * (shotTime / revolutionTime); // 각도 감소 = 시계방향
-                    FireBullet(lastAngle, cfg.bulletSpeed, Mathf.Min(accumulator, dt));
+                    FireBullet(lastAngle, bulletSpeed, Mathf.Min(accumulator, dt));
                     fired = true;
                 }
                 if (fired) FireFeedback(lastAngle);
@@ -483,7 +487,7 @@ namespace Chopper
                     float step = 360f / count;
                     float offset = (fired % 2) * step * 0.5f; // 발사마다 반 칸씩 어긋나게
                     for (int i = 0; i < count; i++)
-                        FireBullet(offset + i * step, cfg.bulletSpeed, 0f);
+                        FireBullet(offset + i * step, bulletSpeed, 0f);
                     FireFeedback(180f);
                     fired++;
                 }
@@ -514,7 +518,7 @@ namespace Chopper
                     if (shotTime > cfg.duration) break;
                     float baseAngle = cfg.rotationSpeed * shotTime; // 각도 증가 = 시계 반대 방향
                     for (int i = 0; i < directions; i++)
-                        FireBullet(baseAngle + i * step, cfg.bulletSpeed, Mathf.Min(accumulator, dt));
+                        FireBullet(baseAngle + i * step, bulletSpeed, Mathf.Min(accumulator, dt));
                     fired = true;
                 }
                 if (fired) FireFeedback(180f);
@@ -561,16 +565,8 @@ namespace Chopper
 
         public HitResult TakeDamage(int amount, Vector2 hitPoint)
         {
-            switch (state)
-            {
-                case State.Reveal:
-                    return HitResult.Blocked; // 등장 중에는 무적(총알만 소멸)
-                case State.Fighting:
-                case State.Halted:
-                    break;
-                default:
-                    return HitResult.Ignored;
-            }
+            // 등장 연출(가로지르기, 모습 드러내기) 중에도 피격된다. 풀에 있거나 이미 처치된 뒤에는 무시
+            if (state == State.Inactive || state == State.Dying) return HitResult.Ignored;
 
             health -= Mathf.Max(0, amount);
             if (flasher != null && hitFlashMaterial != null)
@@ -587,6 +583,13 @@ namespace Chopper
         private void Die()
         {
             state = State.Dying;
+
+            // 등장 연출 도중에 처치되면 그 자리에서 멈춘다
+            if (entranceRoutine != null)
+            {
+                StopCoroutine(entranceRoutine);
+                entranceRoutine = null;
+            }
             StopFight();
             SetColliders(false);
             if (flasher != null) flasher.Stop();
@@ -636,8 +639,10 @@ namespace Chopper
                         if (shakeTimer <= 0f)
                         {
                             shakeTimer = shakeStep;
+                            // 흔들림 세기는 처음이 가장 크고 끝으로 갈수록 0까지 줄어든다(Fade Out)
+                            float fade = 1f - t / deathShakeDuration;
                             visualRoot.localPosition = visualBasePosition + (Vector3)(UnityEngine.Random.insideUnitCircle.normalized *
-                                (deathShakeAmplitude * UnityEngine.Random.Range(0.5f, 1f)));
+                                (deathShakeAmplitude * fade * UnityEngine.Random.Range(0.5f, 1f)));
                         }
                     }
                     else

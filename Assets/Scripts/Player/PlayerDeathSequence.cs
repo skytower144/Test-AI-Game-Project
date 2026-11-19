@@ -5,7 +5,7 @@ namespace Chopper
 {
     /// <summary>
     /// 체력 0 도달 후의 사망 연출.
-    /// 1) 제자리에서 심하게 흔들리며 빨강 점멸 → 2) 점멸 유지, 주변에 소규모 폭발 →
+    /// 1) 제자리에서 흔들리며(점점 약해짐) 빨강 점멸 → 2) 점멸 유지, 주변에 소규모 폭발 →
     /// 3) 대폭발 + 화면 플래시 → 4) 두 파츠로 분리되어 낙하 + 잔해가 튀어 오른 뒤 낙하.
     /// </summary>
     public sealed class PlayerDeathSequence : MonoBehaviour
@@ -18,8 +18,9 @@ namespace Chopper
         [SerializeField] private Material deathFlashMaterial;
 
         [Header("1) Shake")]
+        [Tooltip("제자리에서 흔들리는 시간(초). 흔들림은 이 시간 동안 점점 약해지다 멈춘다(Fade Out)")]
         [SerializeField, Min(0f)] private float shakeDuration = 1f;
-        [Tooltip("흔들림 반경(유닛)")]
+        [Tooltip("흔들림이 시작될 때의 반경(유닛)")]
         [SerializeField, Min(0f)] private float shakeAmplitude = 0.08f;
         [Tooltip("초당 흔들림 횟수")]
         [SerializeField, Min(1f)] private float shakeFrequency = 50f;
@@ -27,7 +28,8 @@ namespace Chopper
         [SerializeField, Min(0.01f)] private float flashInterval = 0.05f;
 
         [Header("2) Small Explosions")]
-        [SerializeField, Min(0f)] private float smallExplosionDuration = 1f;
+        [Tooltip("흔들림이 멈춘 뒤 대폭발까지의 대기 시간(초). 이 동안 소규모 폭발이 생성된다")]
+        [SerializeField, Min(0f)] private float smallExplosionDuration = 1.3f;
         [Tooltip("소규모 폭발 생성 간격 범위(초)")]
         [SerializeField] private Vector2 smallExplosionInterval = new Vector2(0.035f, 0.1f);
         [Tooltip("소규모 폭발이 생성되는 원의 반지름(유닛). 헬리콥터 몸통 전체를 포괄하는 크기")]
@@ -116,7 +118,10 @@ namespace Chopper
                 if (shakeTimer <= 0f && visual != null)
                 {
                     shakeTimer = shakeStep;
-                    visual.localPosition = visualBasePosition + (Vector3)(Random.insideUnitCircle.normalized * (shakeAmplitude * Random.Range(0.5f, 1f)));
+                    // 흔들림 세기는 처음이 가장 크고 끝으로 갈수록 0까지 줄어든다(Fade Out)
+                    float fade = Mathf.Clamp01(1f - t / shakeDuration);
+                    visual.localPosition = visualBasePosition +
+                        (Vector3)(Random.insideUnitCircle.normalized * (shakeAmplitude * fade * Random.Range(0.5f, 1f)));
                 }
                 yield return null;
             }

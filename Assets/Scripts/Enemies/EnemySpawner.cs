@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Chopper
 {
     /// <summary>
-    /// 화면에 항상 약 5~6마리의 몬스터가 존재하도록 스폰을 관리한다.
+    /// 일정한 간격으로 몬스터를 스폰한다. 어떤 몬스터가 나올지는 가중치로 정한다.
     /// 보스가 있는 동안에는 Hornet 스폰을 멈추고 Wasp 스폰 빈도를 크게 낮춘다.
     /// </summary>
     public sealed class EnemySpawner : MonoBehaviour
@@ -13,18 +13,15 @@ namespace Chopper
         [SerializeField] private Enemy hornetPrefab;
 
         [Header("Normal")]
-        [Tooltip("화면에 유지할 몬스터 수 범위")]
-        [SerializeField] private Vector2Int targetCountRange = new Vector2Int(5, 6);
         [Tooltip("스폰 가중치. Wasp가 Hornet보다 높아야 한다")]
         [SerializeField, Min(0f)] private float waspWeight = 3f;
-        [SerializeField, Min(0f)] private float hornetWeight = 1f;
-        [Tooltip("몬스터가 부족할 때 다음 스폰까지의 간격 범위(초)")]
-        [SerializeField] private Vector2 spawnIntervalRange = new Vector2(0.15f, 0.4f);
+        [SerializeField, Min(0f)] private float hornetWeight = 1.8f;
+        [Tooltip("다음 스폰까지의 간격 범위(초)")]
+        [SerializeField] private Vector2 spawnIntervalRange = new Vector2(0.096f, 0.256f);
         [Tooltip("게임 시작 후 첫 스폰까지의 지연(초). 진입 연출(검은색 바)이 끝난 뒤 등장하도록 한다")]
         [SerializeField, Min(0f)] private float startDelay = 2.6f;
 
         [Header("While Boss Is Alive")]
-        [SerializeField, Min(0)] private int bossTargetCount = 2;
         [Tooltip("보스 생존 중 Wasp 스폰 간격 범위(초)")]
         [SerializeField] private Vector2 bossSpawnIntervalRange = new Vector2(3f, 4.5f);
 
@@ -35,7 +32,6 @@ namespace Chopper
         [SerializeField] private Vector2 spawnViewportYRange = new Vector2(0.08f, 0.92f);
 
         private float timer;
-        private int targetCount;
         private bool bossActive;
 
         private void OnEnable()
@@ -66,25 +62,19 @@ namespace Chopper
         {
             bossActive = false;
             timer = startDelay;
-            RollTargetCount();
         }
 
         private void Update()
         {
-            timer -= Time.deltaTime;
+            float dt = Time.deltaTime;
+            timer -= dt;
             if (timer > 0f) return;
 
-            int alive = CountAlive();
-            int target = bossActive ? bossTargetCount : targetCount;
+            Spawn();
 
-            if (alive < target)
-            {
-                Spawn();
-                RollTargetCount();
-            }
-
+            // 이번 프레임에서 늦어진 만큼(음수인 timer)을 다음 간격에서 빼서, 프레임률과 무관하게 평균 스폰 간격을 유지한다
             Vector2 range = bossActive ? bossSpawnIntervalRange : spawnIntervalRange;
-            timer = Random.Range(range.x, range.y);
+            timer = Mathf.Max(timer, -dt) + Random.Range(range.x, range.y);
         }
 
         private void Spawn()
@@ -100,22 +90,6 @@ namespace Chopper
             float x = ScreenBounds.Right + spawnOffsetX;
             float y = ScreenBounds.FromViewport(0f, Random.Range(spawnViewportYRange.x, spawnViewportYRange.y)).y;
             PoolManager.Spawn(prefab, new Vector3(x, y, 0f), Quaternion.identity);
-        }
-
-        private void RollTargetCount()
-        {
-            targetCount = Random.Range(targetCountRange.x, targetCountRange.y + 1);
-        }
-
-        private static int CountAlive()
-        {
-            int count = 0;
-            var list = Enemy.Active;
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i] != null && list[i].IsAlive) count++;
-            }
-            return count;
         }
 
         private void OnBossSpawned(BossSpawnedEvent evt)

@@ -9,11 +9,12 @@ namespace Chopper
     {
         [Header("Hornet Movement")]
         [Tooltip("화면 오른쪽 끝에서 왼쪽 끝까지 이동하는 데 걸리는 시간 범위(초). 값이 클수록 느리다")]
-        [SerializeField] private Vector2 crossTimeRange = new Vector2(1.11f, 1.67f);
+        [SerializeField] private Vector2 crossTimeRange = new Vector2(0.74f, 1.11f);
 
         [Header("Hornet Attack")]
         [SerializeField] private Bullet bulletPrefab;
-        [SerializeField, Min(0.1f)] private float bulletSpeed = 4.5f;
+        [Tooltip("총알 속도(유닛/초). 보스 총알과 같은 값으로 맞춘다")]
+        [SerializeField, Min(0.1f)] private float bulletSpeed = 7.2f;
         [Tooltip("위/아래 총알의 벌어짐 각도(도)")]
         [SerializeField, Range(0f, 90f)] private float spreadAngle = 45f;
         [Tooltip("발사 간격 범위(초)")]

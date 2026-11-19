@@ -81,7 +81,7 @@ MonoBehaviour:
     loopCrossfade: 0
   - id: 30
     clip: {fileID: 8300000, guid: 26fd1f04cb5b6f843ac944c9f688dc91, type: 3}
-    volume: 0.16
+    volume: 0.288
     pitchRange: {x: 0.96, y: 1.04}
     maxVoices: 4
     overflow: 1
@@ -92,7 +92,7 @@ MonoBehaviour:
     loopCrossfade: 0
   - id: 31
     clip: {fileID: 8300000, guid: 195bd5be96482bc4aa5c727673ccbf83, type: 3}
-    volume: 0.2
+    volume: 0.36
     pitchRange: {x: 0.96, y: 1.04}
     maxVoices: 4
     overflow: 1
@@ -356,7 +356,7 @@ MonoBehaviour:
     loopCrossfade: 0
   - id: 74
     clip: {fileID: 8300000, guid: 4ce4a327931f8384d9feee5571678c56, type: 3}
-    volume: 0.4
+    volume: 0.6
     pitchRange: {x: 1, y: 1}
     maxVoices: 1
     overflow: 0
@@ -367,7 +367,7 @@ MonoBehaviour:
     loopCrossfade: 0.25
   - id: 75
     clip: {fileID: 8300000, guid: 2373a5d7c8ed7004fbe376ab63a684d1, type: 3}
-    volume: 0.9
+    volume: 1.35
     pitchRange: {x: 1, y: 1}
     maxVoices: 1
     overflow: 1
@@ -378,7 +378,7 @@ MonoBehaviour:
     loopCrossfade: 0
   - id: 76
     clip: {fileID: 8300000, guid: d49447412d0963d4d86b288285156a0a, type: 3}
-    volume: 0.58
+    volume: 0.87
     pitchRange: {x: 0.94, y: 1.06}
     maxVoices: 3
     overflow: 1
@@ -389,7 +389,7 @@ MonoBehaviour:
     loopCrossfade: 0
   - id: 77
     clip: {fileID: 8300000, guid: 06c644796a2861847945f3e7e8193f99, type: 3}
-    volume: 0.95
+    volume: 1.425
     pitchRange: {x: 0.94, y: 1.06}
     maxVoices: 3
     overflow: 1

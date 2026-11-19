@@ -12,17 +12,20 @@ namespace Chopper
         [SerializeField, Min(0f)] private float ambientFadeIn = 1.2f;
 
         [Header("Gun")]
-        [Tooltip("두 번째 총알타입의 발사음을 늦추는 정도(발사 간격 대비 비율). 0.5 = 첫 번째 총알 소리 사이의 정확히 가운데")]
-        [SerializeField, Range(0f, 1f)] private float rifleSoundOffset = 0.5f;
+        [Tooltip("두 번째 총알타입의 발사음을 늦추는 정도(발사 간격 대비 비율). 0.5 = 첫 번째 총알 소리 사이의 정확히 가운데. " +
+                 "프레임률과 무관하게 일정한 간격으로 재생된다")]
+        [SerializeField, Range(0f, 1f)] private float rifleSoundOffset = 0.4f;
 
         [Header("Chopper Loop")]
         [SerializeField, Min(0f)] private float chopperFadeIn = 0.25f;
         [Tooltip("체력 0 이후 대폭발까지 로터 소리의 피치가 떨어지는 최종값")]
         [SerializeField, Range(0.1f, 1f)] private float dyingChopperPitch = 0.6f;
-        [Tooltip("피치가 떨어지는 데 걸리는 시간(초)")]
-        [SerializeField, Min(0.01f)] private float dyingPitchTime = 2f;
+        [Tooltip("피치가 떨어지는 데 걸리는 시간(초). 체력 0에서 대폭발까지의 시간에 맞춘다")]
+        [SerializeField, Min(0.01f)] private float dyingPitchTime = 2.3f;
 
         [Header("Boss")]
+        [Tooltip("BossArrival이 끝나기 얼마 전부터 BossSlowArrival을 겹쳐 재생할지(초). 0이면 끝나는 순간에 이어서 재생")]
+        [SerializeField, Min(0f)] private float slowArrivalOverlap = 0.3f;
         [SerializeField, Min(0f)] private float bossEngineFadeIn = 0.4f;
         [SerializeField, Min(0f)] private float bossEngineFadeOut = 0.6f;
         [SerializeField, Min(0f)] private float portalFadeOut = 0.35f;
@@ -46,7 +49,6 @@ namespace Chopper
             EventBus.Subscribe<ItemPickedEvent>(OnItemPicked);
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<BossSpawnedEvent>(OnBossSpawned);
-            EventBus.Subscribe<BossRevealStartedEvent>(OnBossRevealStarted);
             EventBus.Subscribe<BossFiredEvent>(OnBossFired);
             EventBus.Subscribe<BossPatternStartedEvent>(OnBossPatternStarted);
             EventBus.Subscribe<BossPatternEndedEvent>(OnBossPatternEnded);
@@ -69,7 +71,6 @@ namespace Chopper
             EventBus.Unsubscribe<ItemPickedEvent>(OnItemPicked);
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<BossSpawnedEvent>(OnBossSpawned);
-            EventBus.Unsubscribe<BossRevealStartedEvent>(OnBossRevealStarted);
             EventBus.Unsubscribe<BossFiredEvent>(OnBossFired);
             EventBus.Unsubscribe<BossPatternStartedEvent>(OnBossPatternStarted);
             EventBus.Unsubscribe<BossPatternEndedEvent>(OnBossPatternEnded);
@@ -102,6 +103,7 @@ namespace Chopper
         private void OnGameReset(GameResetEvent evt)
         {
             playerDying = false;
+            AudioManager.CancelDelayed(SoundId.BossSlowArrival);
             AudioManager.StopLoop(SoundId.BossEngine, bossEngineFadeOut);
             AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
             AudioManager.SetLoopPitch(SoundId.Chopper, 1f);
@@ -118,7 +120,7 @@ namespace Chopper
             float delay = rifle ? Mathf.Max(0f, evt.interval) * rifleSoundOffset : 0f;
 
             AudioManager.Play(rifle ? SoundId.Gun2 : SoundId.Gun, 1f, delay);
-            AudioManager.Play(SoundId.GunLayer, 1f, delay); // 발사음에 공통으로 얹는 낮은 볼륨의 소리
+            AudioManager.Play(SoundId.GunLayer, 1f, delay); // Gun3: 발사음에 공통으로 얹는 낮은 볼륨의 소리
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
@@ -194,12 +196,13 @@ namespace Chopper
         private void OnBossSpawned(BossSpawnedEvent evt)
         {
             AudioManager.Play(SoundId.BossArrival);
-            AudioManager.PlayLoop(SoundId.BossEngine, bossEngineFadeIn);
-        }
 
-        private void OnBossRevealStarted(BossRevealStartedEvent evt)
-        {
-            AudioManager.Play(SoundId.BossSlowArrival);
+            // BossSlowArrival은 BossArrival이 끝나기 직전에 살짝 겹치며 이어지도록, BossArrival의 길이에 맞춰 늦춰 재생한다.
+            // (모습을 드러내는 연출의 시작 시점과는 무관하게 두 소리가 끊기지 않고 이어진다)
+            float delay = Mathf.Max(0f, AudioManager.GetDuration(SoundId.BossArrival) - slowArrivalOverlap);
+            AudioManager.Play(SoundId.BossSlowArrival, 1f, delay);
+
+            AudioManager.PlayLoop(SoundId.BossEngine, bossEngineFadeIn);
         }
 
         private void OnBossFired(BossFiredEvent evt)
@@ -219,6 +222,7 @@ namespace Chopper
 
         private void OnBossDefeated(BossDefeatedEvent evt)
         {
+            AudioManager.CancelDelayed(SoundId.BossSlowArrival);
             AudioManager.StopLoop(SoundId.BossEngine, bossEngineFadeOut);
             AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
         }

@@ -16,9 +16,9 @@ namespace Chopper
 
         [Header("Firing")]
         [Tooltip("발사 간격(초). 두 총알타입에 동일하게 적용")]
-        [SerializeField, Min(0.01f)] private float fireInterval = 0.09f;
+        [SerializeField, Min(0.01f)] private float fireInterval = 0.1125f;
         [Tooltip("라이플 탄창 지속 시간(초). 이 시간 동안 두 번째 총알타입이 함께 발사된다. 재획득 시 이 값으로 초기화")]
-        [SerializeField, Min(0f)] private float rifleDuration = 10f;
+        [SerializeField, Min(0f)] private float rifleDuration = 7f;
 
         [Header("References")]
         [Tooltip("첫 번째 총알타입 발사 지점(헬리콥터의 문)")]

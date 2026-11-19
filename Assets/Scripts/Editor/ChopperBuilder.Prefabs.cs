@@ -46,7 +46,10 @@ namespace Chopper.EditorTools
         private const float BossShipScale = 2f;
 
         /// <summary>보스 대형 폭발(explosion-4) 이펙트의 표시 배율.</summary>
-        private const float BossBlastScale = 1.5f;
+        private const float BossBlastScale = 1.8f;
+
+        /// <summary>적 총알 속도(유닛/초). 보스의 모든 패턴과 Hornet이 같은 속도를 쓴다.</summary>
+        private const float EnemyBulletSpeed = 7.2f;
 
         /// <summary>기울이기 전 헬리콥터 이미지 위의 좌표(중심 원점, 유닛)를 기울어진 이미지 위의 좌표로 옮긴다.</summary>
         private static Vector2 Tilted(Vector2 point)
@@ -276,6 +279,8 @@ namespace Chopper.EditorTools
             Set(hornet, "hitFlashMaterial", whiteMat);
             Set(hornet, "deathEffectScale", 2.56f);
             Set(hornet, "bulletPrefab", Prefab<Bullet>(PfEnemyBullet));
+            // Hornet 총알 속도는 보스 총알(모든 패턴 공통)과 일치시킨다
+            Set(hornet, "bulletSpeed", EnemyBulletSpeed);
             Set(hornet, "muzzleOffset", new Vector2(-0.096f, 0f));
             Set(hornet, "idleFrames", idle);
             Set(hornet, "attackFrames", attack);
@@ -346,6 +351,7 @@ namespace Chopper.EditorTools
             Set(boss, "boosters", new[] { boosterTop, boosterBottom });
             Set(boss, "hitColliders", new Collider2D[] { hull });
             Set(boss, "bulletPrefab", Prefab<Bullet>(PfEnemyBullet));
+            Set(boss, "bulletSpeed", EnemyBulletSpeed); // 모든 패턴 공통(4번 패턴 기준 속도)
             Set(boss, "anchorViewport", new Vector2(0.8f, 0.5f));
 
             // 처치 연출(플레이어 사망 연출과 동일한 구성)
@@ -377,15 +383,17 @@ namespace Chopper.EditorTools
             GameObject go = NewObject(name, parent);
             go.transform.localPosition = localPosition;
 
+            const float flameFps = 21f; // 보스 Idle(부스터 불꽃) 애니메이션 속도
+
             SpriteRenderer renderer = AddSprite(go, normal[0], SortGameplay, 14);
-            SpriteAnimator animator = AddAnimator(go, renderer, normal, 14f, loop: true, pingPong: true, playOnEnable: false);
+            SpriteAnimator animator = AddAnimator(go, renderer, normal, flameFps, loop: true, pingPong: true, playOnEnable: false);
 
             var flame = go.AddComponent<BoosterFlame>();
             Set(flame, "animator", animator);
             Set(flame, "turboFrames", turbo);
             Set(flame, "normalFrames", normal);
             Set(flame, "weakFrames", weak);
-            Set(flame, "framesPerSecond", 14f);
+            Set(flame, "framesPerSecond", flameFps);
             Set(flame, "initialLevel", BoosterLevel.Normal);
             return flame;
         }
@@ -396,7 +404,8 @@ namespace Chopper.EditorTools
         {
             GameObject pivot = NewObject(name, parent);
 
-            GameObject spriteObject = NewObject("Sprite", pivot.transform);
+            // 한 프리팹 안에 Muzzle Flash가 여러 개여도 이름이 겹치지 않게 한다(프리팹을 다시 저장할 때 오브젝트 ID가 유지된다)
+            GameObject spriteObject = NewObject(name + " Sprite", pivot.transform);
             spriteObject.transform.localScale = new Vector3(scale, scale, 1f);
             // 불꽃의 밝은 중심(스프라이트 왼쪽 5px 지점)이 발사 지점에 오도록 오른쪽으로 민다
             spriteObject.transform.localPosition = new Vector3(0.05f * scale, 0f, 0f);
@@ -461,7 +470,7 @@ namespace Chopper.EditorTools
             GameObject visual = NewObject("Visual", root.transform);
             visual.transform.localRotation = Quaternion.Euler(0f, 0f, PlayerTilt);
             SpriteRenderer body = AddSprite(visual, frames[0], SortGameplay, 30);
-            AddAnimator(visual, body, frames, 60f, loop: true); // 빠른 Idle 애니메이션(로터 회전)
+            AddAnimator(visual, body, frames, 120f, loop: true); // 빠른 Idle 애니메이션(로터 회전)
             var flasher = visual.AddComponent<SpriteFlasher>();
             Set(flasher, "renderers", new[] { body });
 
@@ -568,9 +577,9 @@ namespace Chopper.EditorTools
                 Loop(SoundId.Blizzard, "WinterBlizzardOutside4.wav", 0.5f),
 
                 // ── 플레이어 ──
-                // 초당 약 11발 반복되므로 낮은 볼륨 + 동시 4개까지, 초과 시 가장 오래된 소리를 대체
-                Sfx(SoundId.Gun, "Gun.wav", 0.16f, 4, Steal, 0.03f, 0.04f),
-                Sfx(SoundId.Gun2, "Gun2.mp3", 0.2f, 4, Steal, 0.03f, 0.04f, 0.045f),
+                // 초당 약 9발 반복되므로 낮은 볼륨 + 동시 4개까지, 초과 시 가장 오래된 소리를 대체
+                Sfx(SoundId.Gun, "Gun.wav", 0.288f, 4, Steal, 0.03f, 0.04f),
+                Sfx(SoundId.Gun2, "Gun2.mp3", 0.36f, 4, Steal, 0.03f, 0.04f, 0.045f),
                 // Gun3: 발사음을 방해하지 않을 정도의 낮은 볼륨으로 얹는다
                 Sfx(SoundId.GunLayer, "Gun3.mp3", 0.2f, 3, Steal, 0.03f, 0f, 0.07f),
                 Loop(SoundId.Chopper, "Chopper.mp3", 0.16f, 0.046f, 0.008f, 0.12f),
@@ -603,11 +612,12 @@ namespace Chopper.EditorTools
                 Loop(SoundId.BossEngine, "SpaceShip_Engine_Small_Loop_00.mp3", 1f, 0.051f, 0.044f, 0.15f),
                 // 패턴에 따라 초당 30회까지 요청되므로 최소 간격으로 솎아낸다
                 Sfx(SoundId.BossBullet, "BossBullet.mp3", 0.3f, 4, Steal, 0.045f, 0.05f, 0.035f),
-                Loop(SoundId.PortalIdle, "portal_idle.mp3", 0.4f, 0.1f, 0.009f, 0.25f),
-                Sfx(SoundId.Explosion4, "Explosion4.wav", 0.9f, 1, Steal, 0f, 0f),
+                Loop(SoundId.PortalIdle, "portal_idle.mp3", 0.6f, 0.1f, 0.009f, 0.25f),
+                // 보스 대폭발음은 볼륨이 1을 넘는다(AudioManager가 같은 소리를 겹쳐 재생해 그만큼 키운다)
+                Sfx(SoundId.Explosion4, "Explosion4.wav", 1.35f, 1, Steal, 0f, 0f),
                 // 대형 폭발 3개가 0.1초 간격으로 겹쳐 울리도록 동시 3개 허용
-                Sfx(SoundId.Explosion2, "Explosion2.wav", 0.58f, 3, Steal, 0f, 0.06f),
-                Sfx(SoundId.Explosion3, "Explosion3.wav", 0.95f, 3, Steal, 0f, 0.06f),
+                Sfx(SoundId.Explosion2, "Explosion2.wav", 0.87f, 3, Steal, 0f, 0.06f),
+                Sfx(SoundId.Explosion3, "Explosion3.wav", 1.425f, 3, Steal, 0f, 0.06f),
             };
 
             Set(library, "sounds", sounds);
