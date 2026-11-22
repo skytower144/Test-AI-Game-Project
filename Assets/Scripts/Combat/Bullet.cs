@@ -38,6 +38,9 @@ namespace Chopper
 
         public BulletTeam Team => team;
         public float DefaultSpeed => speed;
+        public float HitRadius => hitRadius;
+        public float DespawnMargin => despawnMargin;
+        public bool RotatesToDirection => rotateToDirection;
         public bool IsLive => live;
 
         private void Awake()

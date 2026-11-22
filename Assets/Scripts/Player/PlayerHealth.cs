@@ -48,7 +48,8 @@ namespace Chopper
         public int Health => health;
         public int MaxHealth => maxHealth;
         public bool IsDead => dead;
-        public bool IsInvincible => invincibleTimer > 0f;
+        /// <summary>피해를 받지 않는 상태인지: 부활 직후의 무적 시간이거나, 패턴 테스트의 플레이어 무적이 켜져 있는 동안.</summary>
+        public bool IsInvincible => invincibleTimer > 0f || BossPatternTest.PlayerInvincible;
 
         /// <summary>적 총알/몸통의 판정 대상이 될 수 있는 상태인지.</summary>
         public bool IsTargetable => !dead && isActiveAndEnabled && hitCollider != null && hitCollider.enabled;

@@ -77,18 +77,25 @@ namespace Chopper
 
     // ───────────── 보스 ─────────────
 
-    /// <summary>보스 등장 순간(화면을 가로지르는 비행 시작).</summary>
-    public struct BossSpawnedEvent : IGameEvent { }
+    /// <summary>
+    /// 보스 등장 순간(화면을 가로지르는 비행 시작).
+    /// instant가 true면 등장 연출 없이 바로 전투 위치에 나타난 것이다(패턴 테스트).
+    /// </summary>
+    public struct BossSpawnedEvent : IGameEvent { public bool instant; }
 
     /// <summary>화면 오른쪽 끝에서 서서히 모습을 드러내기 시작하는 순간.</summary>
     public struct BossRevealStartedEvent : IGameEvent { }
 
     public struct BossFiredEvent : IGameEvent { }
 
-    /// <summary>행동 패턴 시작. patternIndex는 0~4.</summary>
-    public struct BossPatternStartedEvent : IGameEvent { public int patternIndex; }
+    /// <summary>
+    /// 행동 패턴 시작. patternIndex는 보스의 패턴 목록에서의 순서(0부터), pattern은 실행하는 패턴 에셋.
+    /// 패턴 테스트로 실행하는 패턴은 목록에 없으므로 patternIndex가 -1이다.
+    /// </summary>
+    public struct BossPatternStartedEvent : IGameEvent { public int patternIndex; public BossPattern pattern; }
 
-    public struct BossPatternEndedEvent : IGameEvent { public int patternIndex; }
+    /// <summary>행동 패턴 종료(끝까지 실행했거나, 처치/결과 화면 등으로 중단된 경우 모두).</summary>
+    public struct BossPatternEndedEvent : IGameEvent { public int patternIndex; public BossPattern pattern; }
 
     /// <summary>보스 체력이 0이 된 순간(처치).</summary>
     public struct BossDefeatedEvent : IGameEvent { public Vector2 position; public int score; }

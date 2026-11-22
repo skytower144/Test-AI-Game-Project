@@ -50,7 +50,7 @@ namespace Chopper
         BossSlowArrival = 71,
         BossEngine = 72,        // 생존 중 Loop
         BossBullet = 73,
-        PortalIdle = 74,        // 5번 패턴 진행 중 Loop
+        PortalIdle = 74,        // 패턴 진행 중 Loop(패턴 에셋의 Loop Sound로 지정)
         Explosion4 = 75,        // 대폭발 1회
         Explosion2 = 76,        // 대형 폭발 이펙트마다
         Explosion3 = 77,        // 대형 폭발 이펙트마다

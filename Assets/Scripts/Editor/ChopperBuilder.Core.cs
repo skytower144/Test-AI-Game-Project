@@ -125,7 +125,8 @@ namespace Chopper.EditorTools
 
             bool ok = EditorUtility.DisplayDialog("Chopper",
                 "Assets/Prefabs, Assets/Data, Title/Game 씬을 프로젝트 리소스로부터 다시 생성합니다.\n" +
-                "해당 프리팹과 씬에서 직접 수정한 값은 덮어써집니다. 계속할까요?", "Rebuild", "Cancel");
+                "해당 프리팹과 씬에서 직접 수정한 값은 덮어써집니다.\n" +
+                "(보스 패턴 에셋과 보스의 패턴 목록은 덮어쓰지 않고 그대로 둡니다.)\n계속할까요?", "Rebuild", "Cancel");
             if (ok) BuildAll();
         }
 

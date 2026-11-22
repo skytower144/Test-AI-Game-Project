@@ -1,69 +1,19 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Chopper
 {
     /// <summary>
-    /// 보스(Ship6). 등장 연출 → 5가지 행동 패턴 순환 → 처치 연출을 담당한다.
+    /// 보스(Ship6). 등장 연출 → 행동 패턴 순환 → 처치 연출을 담당한다.
+    /// 행동 패턴은 코드가 아니라 패턴 에셋(BossPattern) 목록으로 정해지며, 목록의 순서대로 반복 실행한다.
     /// 보스는 항상 오른쪽(원본 아트 방향)을 향한다. 몸통 접촉 피해는 없으며(IPlayerContact 미구현),
-    /// 총알은 눈알 위치에서 발사한다.
+    /// 발사 지점의 위치는 눈알을 기준으로 한다.
+    /// 패턴 테스트(BossPatternTest) 중에는 등장 연출 없이 바로 전투 위치에 나타나 지정된 패턴만 반복한다.
     /// </summary>
     public sealed class Boss : MonoBehaviour, IPoolable, IDamageable
     {
-        // ───────────── 패턴 설정 ─────────────
-
-        [Serializable]
-        public class FanPattern // 7.1
-        {
-            [Tooltip("상하 이동 폭(유닛)")] public float amplitude = 1.7f;
-            [Tooltip("상하 왕복 1회에 걸리는 시간(초)")] public float period = 2.6f;
-            [Tooltip("상하 왕복 횟수")] public int cycles = 2;
-            [Tooltip("발사 간격(초)")] public float fireInterval = 0.75f;
-            [Tooltip("한 번에 발사하는 총알 수")] public int bulletCount = 5;
-            [Tooltip("총알 사이 각도(도). 작을수록 총알들이 오래 겹쳐 한 줄의 선처럼 보인다 " +
-                     "(3.4도 = 화면 절반쯤 날아갔을 때 이웃한 총알이 살짝 겹치는 정도)")]
-            public float spreadStep = 3.4f;
-        }
-
-        [Serializable]
-        public class SweepPattern // 7.2
-        {
-            [Tooltip("위아래 왕복 횟수")] public int sweeps = 4;
-            [Tooltip("왕복 1회에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float sweepPeriod = 0.4413f;
-            [Tooltip("위/아래로 꺾이는 최대 각도(도)")] public float sweepAngle = 55f;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.0147f;
-        }
-
-        [Serializable]
-        public class SpiralPattern // 7.3
-        {
-            [Tooltip("시계방향 회전 수")] public int revolutions = 3;
-            [Tooltip("1회전에 걸리는 시간(초). 작을수록 발사 방향이 빠르게 바뀐다")] public float revolutionTime = 1.11f;
-            [Tooltip("연사 간격(초). 값이 클수록 탄 사이 틈이 넓어 회피가 쉽다")] public float fireInterval = 0.029f;
-        }
-
-        [Serializable]
-        public class RingPattern // 7.4
-        {
-            [Tooltip("단발 발사 반복 횟수")] public int volleys = 3;
-            [Tooltip("단발 발사 간격(초)")] public float volleyInterval = 0.8f;
-            [Tooltip("한 번에 전방위로 발사하는 총알 수")] public int bulletsPerVolley = 24;
-            [Tooltip("좌우 이동 폭(유닛)")] public float moveAmplitude = 1.2f;
-            [Tooltip("좌우 왕복 1회에 걸리는 시간(초)")] public float movePeriod = 1.6f;
-            [Tooltip("첫 발사 전 대기(초)")] public float leadTime = 0.4f;
-            [Tooltip("마지막 발사 후 대기(초)")] public float tailTime = 0.6f;
-        }
-
-        [Serializable]
-        public class RotaryPattern // 7.5
-        {
-            [Tooltip("패턴 지속 시간(초)")] public float duration = 8f;
-            [Tooltip("발사 방향 수(8 = 45도 간격)")] public int directions = 8;
-            [Tooltip("연사 간격(초)")] public float fireInterval = 0.0517f;
-            [Tooltip("발사 방향 전체가 도는 속도(도/초). 양수 = 시계 반대 방향, 음수 = 시계 방향")] public float rotationSpeed = 47.52f;
-        }
-
         private enum State { Inactive, FlyBy, Reveal, Fighting, Halted, Dying }
 
         // ───────────── 인스펙터 ─────────────
@@ -79,11 +29,12 @@ namespace Chopper
         [SerializeField] private SpriteRenderer shipRenderer;
         [SerializeField] private SpriteFlasher flasher;
         [SerializeField] private Material hitFlashMaterial;
-        [Tooltip("총알 발사 지점(Ship6의 눈알)")]
+        [Tooltip("패턴의 발사 지점 위치가 기준으로 삼는 곳(Ship6의 눈알)")]
         [SerializeField] private Transform eye;
         [SerializeField] private SpriteAnimator muzzleFlash;
         [SerializeField] private BoosterFlame[] boosters = Array.Empty<BoosterFlame>();
         [SerializeField] private Collider2D[] hitColliders = Array.Empty<Collider2D>();
+        [Tooltip("기본 총알. 패턴의 발사 지점에 총알 타입이 지정되지 않았을 때 쓴다")]
         [SerializeField] private Bullet bulletPrefab;
 
         [Header("Entrance")]
@@ -116,13 +67,9 @@ namespace Chopper
         [SerializeField, Min(0f)] private float verticalPadding = 0.85f;
 
         [Header("Patterns")]
-        [Tooltip("모든 패턴 공통 총알 속도(유닛/초). Hornet의 총알 속도도 같은 값으로 맞춘다")]
-        [SerializeField, Min(0.1f)] private float bulletSpeed = 7.2f;
-        [SerializeField] private FanPattern pattern1 = new FanPattern();
-        [SerializeField] private SweepPattern pattern2 = new SweepPattern();
-        [SerializeField] private SpiralPattern pattern3 = new SpiralPattern();
-        [SerializeField] private RingPattern pattern4 = new RingPattern();
-        [SerializeField] private RotaryPattern pattern5 = new RotaryPattern();
+        [Tooltip("행동 패턴 목록. 위에서부터 순서대로 실행하고, 끝까지 가면 처음으로 돌아간다.\n" +
+                 "패턴 에셋은 Tools > Chopper > Boss Pattern Editor에서 만들고 고친다")]
+        [SerializeField] private BossPattern[] patterns = Array.Empty<BossPattern>();
 
         [Header("Feedback")]
         [SerializeField, Min(0.01f)] private float hitFlashInterval = 0.05f;
@@ -186,9 +133,17 @@ namespace Chopper
 
         // ───────────── 런타임 상태 ─────────────
 
+        private readonly List<PatternShot> shotBuffer = new List<PatternShot>(64);
+
+        /// <summary>패턴 목록에 없는 패턴(패턴 테스트)을 실행할 때 이벤트에 싣는 패턴 번호.</summary>
+        public const int TestPatternIndex = -1;
+
         private State state = State.Inactive;
         private int health;
-        private int activePattern = -1;
+        private bool patternActive;
+        private int activePatternIndex;
+        private BossPattern activePatternData;
+        private BossPattern followedTest;   // 지금 따르고 있는 테스트 패턴(없으면 null)
         private bool halted;
         private Vector2 patternOffset;
         private Vector2 velocity;
@@ -202,6 +157,15 @@ namespace Chopper
         public int Health => health;
         public int MaxHealth => maxHealth;
         public bool IsDefeated => state == State.Dying;
+
+        // 패턴 에디터가 미리보기를 게임과 똑같이 그리기 위해 읽는 값
+        public IReadOnlyList<BossPattern> Patterns => patterns;
+        public Bullet DefaultBulletPrefab => bulletPrefab;
+        public Transform Eye => eye;
+        public SpriteRenderer ShipRenderer => shipRenderer;
+        public Vector2 AnchorViewport => anchorViewport;
+        public float MoveSmoothTime => moveSmoothTime;
+        public float VerticalPadding => verticalPadding;
 
         private Vector2 Anchor => ScreenBounds.FromViewport(anchorViewport.x, anchorViewport.y);
 
@@ -236,7 +200,8 @@ namespace Chopper
             StopAllCoroutines();
             entranceRoutine = null;
             fightRoutine = null;
-            activePattern = -1;
+            patternActive = false;
+            activePatternData = null;
             halted = false;
             health = maxHealth;
             patternOffset = Vector2.zero;
@@ -247,7 +212,16 @@ namespace Chopper
             if (flasher != null) flasher.Stop();
             if (muzzleFlash != null && muzzleFlash.Target != null) muzzleFlash.Target.enabled = false;
 
-            entranceRoutine = StartCoroutine(EntranceRoutine());
+            followedTest = BossPatternTest.Pattern;
+            if (followedTest != null)
+            {
+                GameManager.MarkRunUnranked();
+                BeginInstant();
+            }
+            else
+            {
+                entranceRoutine = StartCoroutine(EntranceRoutine());
+            }
         }
 
         public void OnDespawned()
@@ -319,6 +293,35 @@ namespace Chopper
             }
         }
 
+        /// <summary>등장 연출 없이 바로 전투 위치에서 전투를 시작한다(패턴 테스트).</summary>
+        private void BeginInstant()
+        {
+            if (entranceRoutine != null)
+            {
+                StopCoroutine(entranceRoutine);
+                entranceRoutine = null;
+            }
+            StopFight();
+
+            SetColliders(true);
+            SetBoosters(BoosterLevel.Normal);
+
+            Vector2 anchor = Anchor;
+            transform.position = new Vector3(anchor.x, anchor.y, 0f);
+            velocity = Vector2.zero;
+            patternOffset = Vector2.zero;
+            EventBus.Publish(new BossSpawnedEvent { instant = true });
+
+            if (halted)
+            {
+                state = State.Halted;
+                return;
+            }
+
+            state = State.Fighting;
+            fightRoutine = StartCoroutine(FightRoutine());
+        }
+
         /// <summary>처음이 빠르고 끝으로 갈수록 느려지는 보간(0~1). power = 1이면 등속.</summary>
         private static float EaseOut(float t, float power)
         {
@@ -329,233 +332,203 @@ namespace Chopper
 
         private void Update()
         {
+            SyncPatternTest();
             if (state != State.Fighting && state != State.Halted) return;
 
             float hover = Mathf.Sin(Time.time * hoverFrequency) * hoverAmplitude;
             Vector2 desired = Anchor + patternOffset + new Vector2(0f, hover);
 
-            float minY = ScreenBounds.Bottom + verticalPadding;
-            float maxY = ScreenBounds.Top - verticalPadding;
-            if (minY < maxY) desired.y = Mathf.Clamp(desired.y, minY, maxY);
-
-            Vector2 position = Vector2.SmoothDamp(transform.position, desired, ref velocity, moveSmoothTime);
+            Vector2 position = StepBody(transform.position, desired, ref velocity, moveSmoothTime,
+                ScreenBounds.Bottom + verticalPadding, ScreenBounds.Top - verticalPadding, Time.deltaTime);
             transform.position = new Vector3(position.x, position.y, 0f);
+        }
+
+        /// <summary>
+        /// 전투 중 본체를 목표 위치(desired)로 부드럽게 한 스텝 옮긴 위치를 돌려준다.
+        /// 목표의 높이는 minY~maxY로 제한한다. 게임과 패턴 에디터의 미리보기가 같은 계산을 쓴다.
+        /// </summary>
+        public static Vector2 StepBody(Vector2 current, Vector2 desired, ref Vector2 velocity, float smoothTime,
+            float minY, float maxY, float deltaTime)
+        {
+            if (minY < maxY) desired.y = Mathf.Clamp(desired.y, minY, maxY);
+            return Vector2.SmoothDamp(current, desired, ref velocity, smoothTime, Mathf.Infinity, deltaTime);
+        }
+
+        /// <summary>패턴 테스트(BossPatternTest)가 켜지거나, 꺼지거나, 다른 패턴으로 바뀌면 바로 따라간다.</summary>
+        private void SyncPatternTest()
+        {
+            BossPattern test = BossPatternTest.Pattern;
+            if (ReferenceEquals(test, followedTest)) return;
+            followedTest = test;
+
+            if (test != null) GameManager.MarkRunUnranked();
+
+            switch (state)
+            {
+                case State.FlyBy:
+                case State.Reveal:
+                    // 테스트를 켜면 등장 연출을 건너뛴다(끄는 경우에는 등장 연출을 그대로 이어 간다)
+                    if (test != null) BeginInstant();
+                    break;
+
+                case State.Fighting:
+                    // 실행 중이던 패턴을 중단하고, 테스트 패턴(끈 경우에는 패턴 목록의 처음)부터 다시 시작한다
+                    StopFight();
+                    patternOffset = Vector2.zero;
+                    SetBoosters(BoosterLevel.Normal);
+                    fightRoutine = StartCoroutine(FightRoutine());
+                    break;
+            }
         }
 
         private IEnumerator FightRoutine()
         {
-            yield return Wait(firstPatternDelay);
+            // 패턴 테스트 중에는 기다리지 않고 바로 시작한다
+            if (followedTest == null) yield return Wait(firstPatternDelay);
 
-            int index = 0;
+            int index = -1;
             while (true)
             {
-                activePattern = index;
-                EventBus.Publish(new BossPatternStartedEvent { patternIndex = index });
+                // 테스트 패턴이 바뀌거나 꺼지면 SyncPatternTest가 이 루틴을 처음부터 다시 시작한다
+                BossPattern test = followedTest;
+                BossPattern pattern = test;
+                int patternIndex = TestPatternIndex;
 
-                switch (index)
+                if (test == null)
                 {
-                    case 0: yield return PatternFan(); break;
-                    case 1: yield return PatternSweep(); break;
-                    case 2: yield return PatternSpiral(); break;
-                    case 3: yield return PatternRing(); break;
-                    default: yield return PatternRotary(); break;
+                    index = NextPatternIndex(index);
+                    if (index < 0)
+                    {
+                        // 실행할 패턴이 하나도 없으면 제자리에서 기다린다
+                        yield return null;
+                        continue;
+                    }
+                    pattern = patterns[index];
+                    patternIndex = index;
                 }
+
+                patternActive = true;
+                activePatternIndex = patternIndex;
+                activePatternData = pattern;
+                EventBus.Publish(new BossPatternStartedEvent { patternIndex = patternIndex, pattern = pattern });
+
+                yield return RunPattern(pattern);
 
                 EndActivePattern();
                 patternOffset = Vector2.zero;
                 SetBoosters(BoosterLevel.Normal);
 
-                yield return Wait(UnityEngine.Random.Range(patternWaitRange.x, patternWaitRange.y));
-                index = (index + 1) % 5;
+                yield return Wait(test != null
+                    ? BossPatternTest.RepeatDelay
+                    : UnityEngine.Random.Range(patternWaitRange.x, patternWaitRange.y));
             }
         }
 
-        // 7.1 상하로 크게 이동하면서 플레이어 방향으로 5발 부채꼴 발사
-        private IEnumerator PatternFan()
+        /// <summary>목록에서 current 다음에 실행할 패턴의 번호(비어 있는 칸은 건너뛴다). 실행할 패턴이 없으면 -1.</summary>
+        private int NextPatternIndex(int current)
         {
-            FanPattern cfg = pattern1;
-            SetBoosters(BoosterLevel.Turbo);
+            int count = patterns != null ? patterns.Length : 0;
+            for (int step = 1; step <= count; step++)
+            {
+                int candidate = (current + step) % count;
+                if (patterns[candidate] != null) return candidate;
+            }
+            return -1;
+        }
 
-            float duration = Mathf.Max(1, cfg.cycles) * Mathf.Max(0.1f, cfg.period);
-            float interval = Mathf.Max(0.05f, cfg.fireInterval);
+        /// <summary>
+        /// 패턴 에셋 1개를 처음부터 끝까지 실행한다.
+        /// 매 프레임 "지난 프레임 시각 ~ 이번 프레임 시각" 사이에 일어난 발사를 패턴에서 받아 총알을 쏘고,
+        /// 총알은 원래 발사됐어야 할 시각으로부터 지난 시간만큼 미리 전진시켜 프레임률과 무관하게 탄 간격이 균일하다.
+        /// </summary>
+        private IEnumerator RunPattern(BossPattern pattern)
+        {
+            SetBoosters(pattern.boosters);
+
             float t = 0f;
-            float fireTimer = interval * 0.5f;
-
-            while (t < duration)
+            while (pattern != null && t < pattern.duration) // 실행 도중 패턴이 삭제되면 그 자리에서 끝낸다
             {
-                float dt = Time.deltaTime;
-                t += dt;
-                patternOffset = new Vector2(0f, cfg.amplitude * Mathf.Sin(t / cfg.period * Mathf.PI * 2f));
-
-                fireTimer -= dt;
-                if (fireTimer <= 0f)
-                {
-                    fireTimer += interval;
-                    float aim = AimAngle();
-                    int count = Mathf.Max(1, cfg.bulletCount);
-                    for (int i = 0; i < count; i++)
-                        FireBullet(aim + (i - (count - 1) * 0.5f) * cfg.spreadStep, bulletSpeed, 0f);
-                    FireFeedback(aim);
-                }
-                yield return null;
-            }
-        }
-
-        // 7.2 위아래로 빠르게 흩뿌리는 연발, 4회 왕복 후 중단
-        private IEnumerator PatternSweep()
-        {
-            SweepPattern cfg = pattern2;
-            float period = Mathf.Max(0.1f, cfg.sweepPeriod);
-            float duration = Mathf.Max(1, cfg.sweeps) * period;
-            float interval = Mathf.Max(0.01f, cfg.fireInterval);
-            float t = 0f, accumulator = 0f;
-
-            while (t < duration)
-            {
-                float dt = Time.deltaTime;
-                t += dt;
-                accumulator += dt;
-
-                bool fired = false;
-                float lastAngle = 180f;
-                while (accumulator >= interval)
-                {
-                    accumulator -= interval;
-                    float shotTime = t - accumulator;
-                    if (shotTime > duration) break;
-                    lastAngle = 180f - cfg.sweepAngle * Mathf.Sin(shotTime / period * Mathf.PI * 2f);
-                    FireBullet(lastAngle, bulletSpeed, accumulator);
-                    fired = true;
-                }
-                if (fired) FireFeedback(lastAngle);
-                yield return null;
-            }
-        }
-
-        // 7.3 12시 방향부터 시계방향으로 3바퀴 회전하며 연발
-        private IEnumerator PatternSpiral()
-        {
-            SpiralPattern cfg = pattern3;
-            float revolutionTime = Mathf.Max(0.1f, cfg.revolutionTime);
-            float duration = Mathf.Max(1, cfg.revolutions) * revolutionTime;
-            float interval = Mathf.Max(0.01f, cfg.fireInterval);
-            float t = 0f, accumulator = interval; // 시작 즉시 12시 방향 1발
-
-            while (t < duration)
-            {
-                float dt = Time.deltaTime;
-                t += dt;
-                accumulator += dt;
-
-                bool fired = false;
-                float lastAngle = 90f;
-                while (accumulator >= interval)
-                {
-                    accumulator -= interval;
-                    float shotTime = Mathf.Max(0f, t - accumulator);
-                    if (shotTime > duration) break;
-                    lastAngle = 90f - 360f * (shotTime / revolutionTime); // 각도 감소 = 시계방향
-                    FireBullet(lastAngle, bulletSpeed, Mathf.Min(accumulator, dt));
-                    fired = true;
-                }
-                if (fired) FireFeedback(lastAngle);
-                yield return null;
-            }
-        }
-
-        // 7.4 좌우로 이동하면서 전방위 동시 단발 발사 3회
-        private IEnumerator PatternRing()
-        {
-            RingPattern cfg = pattern4;
-            SetBoosters(BoosterLevel.Turbo);
-
-            int volleys = Mathf.Max(1, cfg.volleys);
-            float duration = cfg.leadTime + (volleys - 1) * cfg.volleyInterval + cfg.tailTime;
-            float period = Mathf.Max(0.1f, cfg.movePeriod);
-            float t = 0f;
-            int fired = 0;
-
-            while (t < duration)
-            {
+                float previous = t;
                 t += Time.deltaTime;
-                // 기준 위치에서 왼쪽으로 나갔다가 돌아오는 부드러운 좌우 왕복
-                patternOffset = new Vector2(-cfg.moveAmplitude * 0.5f * (1f - Mathf.Cos(t / period * Mathf.PI * 2f)), 0f);
 
-                while (fired < volleys && t >= cfg.leadTime + fired * cfg.volleyInterval)
-                {
-                    int count = Mathf.Max(1, cfg.bulletsPerVolley);
-                    float step = 360f / count;
-                    float offset = (fired % 2) * step * 0.5f; // 발사마다 반 칸씩 어긋나게
-                    for (int i = 0; i < count; i++)
-                        FireBullet(offset + i * step, bulletSpeed, 0f);
-                    FireFeedback(180f);
-                    fired++;
-                }
-                yield return null;
-            }
-        }
-
-        // 7.5 45도 간격 8방향 연발, 발사 방향 전체가 시계 반대 방향으로 회전 (약 8초)
-        private IEnumerator PatternRotary()
-        {
-            RotaryPattern cfg = pattern5;
-            float interval = Mathf.Max(0.02f, cfg.fireInterval);
-            int directions = Mathf.Max(1, cfg.directions);
-            float step = 360f / directions;
-            float t = 0f, accumulator = interval;
-
-            while (t < cfg.duration)
-            {
-                float dt = Time.deltaTime;
-                t += dt;
-                accumulator += dt;
-
-                bool fired = false;
-                while (accumulator >= interval)
-                {
-                    accumulator -= interval;
-                    float shotTime = Mathf.Max(0f, t - accumulator);
-                    if (shotTime > cfg.duration) break;
-                    float baseAngle = cfg.rotationSpeed * shotTime; // 각도 증가 = 시계 반대 방향
-                    for (int i = 0; i < directions; i++)
-                        FireBullet(baseAngle + i * step, bulletSpeed, Mathf.Min(accumulator, dt));
-                    fired = true;
-                }
-                if (fired) FireFeedback(180f);
+                patternOffset = pattern.BodyOffsetAt(t);
+                FireShots(pattern, previous, t);
                 yield return null;
             }
         }
 
         // ───────────── 발사 ─────────────
 
-        private float AimAngle()
+        private void FireShots(BossPattern pattern, float fromTime, float toTime)
         {
+            shotBuffer.Clear();
+            pattern.CollectShots(fromTime, toTime, shotBuffer);
+            if (shotBuffer.Count == 0) return;
+
+            Vector2 eyePosition = eye != null ? (Vector2)eye.position : (Vector2)transform.position;
+            Vector2 screenCenter = ScreenBounds.Center;
+
             PlayerHealth player = PlayerHealth.Current;
-            if (player != null && !player.IsDead && eye != null)
+            bool hasTarget = player != null && !player.IsDead;
+            Vector2 target = hasTarget ? player.HitCenter : Vector2.zero;
+
+            bool fired = false;
+            Vector2 flashPosition = eyePosition;
+            float flashAngle = 180f;
+
+            for (int i = 0; i < shotBuffer.Count; i++)
             {
-                Vector2 toPlayer = player.HitCenter - (Vector2)eye.position;
-                if (toPlayer.sqrMagnitude > 0.01f)
-                    return Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
+                PatternShot shot = shotBuffer[i];
+                PatternEmitter emitter = pattern.emitters[shot.emitterIndex];
+
+                Bullet prefab = emitter.bulletPrefab != null ? emitter.bulletPrefab : bulletPrefab;
+                if (prefab == null) continue;
+
+                Vector2 origin = (emitter.space == PatternSpace.Screen ? screenCenter : eyePosition) + shot.position;
+
+                float center = shot.angle;
+                if (emitter.aim == PatternAim.AtPlayer) center += AimAngle(origin, hasTarget, target);
+
+                // 원래 발사됐어야 할 시각으로부터 지난 시간만큼 총알을 미리 전진시킨다
+                float elapsed = toTime - shot.time;
+                int count = emitter.BulletCount;
+                for (int b = 0; b < count; b++)
+                    FireBullet(prefab, origin, emitter.BulletAngle(center, b), emitter.bulletSpeed, elapsed);
+
+                fired = true;
+                flashPosition = origin;
+                flashAngle = emitter.layout == ShotLayout.Ring ? 180f : center;
+            }
+
+            if (fired) FireFeedback(flashPosition, flashAngle);
+        }
+
+        /// <summary>origin에서 플레이어를 향하는 각도(도). 플레이어가 없거나 사망했으면 왼쪽(180도).</summary>
+        public static float AimAngle(Vector2 origin, bool hasTarget, Vector2 target)
+        {
+            if (hasTarget)
+            {
+                Vector2 toTarget = target - origin;
+                if (toTarget.sqrMagnitude > 0.01f)
+                    return Mathf.Atan2(toTarget.y, toTarget.x) * Mathf.Rad2Deg;
             }
             return 180f;
         }
 
-        private void FireBullet(float angleDegrees, float speed, float elapsed)
+        private static void FireBullet(Bullet prefab, Vector2 origin, float angleDegrees, float speed, float elapsed)
         {
-            if (bulletPrefab == null || eye == null) return;
-
             float radians = angleDegrees * Mathf.Deg2Rad;
-            Bullet bullet = PoolManager.Spawn(bulletPrefab, eye.position, Quaternion.identity);
+            Bullet bullet = PoolManager.Spawn(prefab, origin, Quaternion.identity);
             if (bullet != null)
                 bullet.Launch(new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)), speed, elapsed);
         }
 
-        private void FireFeedback(float angleDegrees)
+        private void FireFeedback(Vector2 position, float angleDegrees)
         {
-            if (muzzleFlash != null && eye != null)
+            if (muzzleFlash != null)
             {
                 Transform flash = muzzleFlash.transform;
-                flash.SetPositionAndRotation(eye.position, Quaternion.Euler(0f, 0f, angleDegrees));
+                flash.SetPositionAndRotation(position, Quaternion.Euler(0f, 0f, angleDegrees));
                 muzzleFlash.Play();
             }
             EventBus.Publish(new BossFiredEvent());
@@ -799,10 +772,12 @@ namespace Chopper
 
         private void EndActivePattern()
         {
-            if (activePattern < 0) return;
-            int index = activePattern;
-            activePattern = -1;
-            EventBus.Publish(new BossPatternEndedEvent { patternIndex = index });
+            if (!patternActive) return;
+            int index = activePatternIndex;
+            BossPattern pattern = activePatternData;
+            patternActive = false;
+            activePatternData = null;
+            EventBus.Publish(new BossPatternEndedEvent { patternIndex = index, pattern = pattern });
         }
 
         private void SetBoosters(BoosterLevel level)

@@ -33,6 +33,7 @@ namespace Chopper
         private int lives;
         private GameState state = GameState.Playing;
         private bool awaitingRevive;
+        private bool unranked;
 
         public static int Score => s_Instance != null ? s_Instance.score : 0;
         public static int Lives => s_Instance != null ? s_Instance.lives : 0;
@@ -40,6 +41,18 @@ namespace Chopper
 
         /// <summary>플레이어 조작(이동/발사)이 허용되는 상태인지.</summary>
         public static bool ControlsEnabled => s_Instance == null || s_Instance.state == GameState.Playing;
+
+        /// <summary>이번 판의 점수를 리더보드에 기록하지 않는지(패턴 테스트를 한 판).</summary>
+        public static bool IsRunUnranked => s_Instance != null && s_Instance.unranked;
+
+        /// <summary>
+        /// 이번 판의 점수를 리더보드에 기록하지 않게 한다. 보스를 마음대로 불러내는 패턴 테스트처럼
+        /// 정상적인 진행이 아닌 기능을 쓴 판에 쓴다. RETRY로 새 판을 시작하면 해제된다.
+        /// </summary>
+        public static void MarkRunUnranked()
+        {
+            if (s_Instance != null) s_Instance.unranked = true;
+        }
 
         /// <summary>사망 연출이 끝났고 목숨이 남아 R키로 부활할 수 있는 상태인지.</summary>
         public static bool CanRevive => s_Instance != null && s_Instance.state == GameState.Playing &&
@@ -163,7 +176,11 @@ namespace Chopper
 
             yield return new WaitForSeconds(resultsDelay);
 
-            List<ScoreEntry> entries = Leaderboard.Submit(GameSession.PlayerName, score, out int rank);
+            // 기록하지 않는 판(패턴 테스트)은 기존 순위만 보여 준다
+            int rank = -1;
+            List<ScoreEntry> entries = unranked
+                ? Leaderboard.Load()
+                : Leaderboard.Submit(GameSession.PlayerName, score, out rank);
             state = GameState.Results;
             EventBus.Publish(new ResultsShownEvent { entries = entries, playerRank = rank, score = score });
         }
@@ -184,6 +201,7 @@ namespace Chopper
             lives = maxLives;
             state = GameState.Playing;
             awaitingRevive = false;
+            unranked = false;
 
             Time.timeScale = 1f;
             Cursor.visible = false;

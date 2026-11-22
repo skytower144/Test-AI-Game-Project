@@ -225,36 +225,13 @@ MonoBehaviour:
   hoverAmplitude: 0.1
   hoverFrequency: 2.7
   verticalPadding: 0.85
-  bulletSpeed: 7.2
-  pattern1:
-    amplitude: 1.7
-    period: 2.6
-    cycles: 2
-    fireInterval: 0.75
-    bulletCount: 5
-    spreadStep: 3.4
-  pattern2:
-    sweeps: 4
-    sweepPeriod: 0.4413
-    sweepAngle: 55
-    fireInterval: 0.0147
-  pattern3:
-    revolutions: 3
-    revolutionTime: 1.11
-    fireInterval: 0.029
-  pattern4:
-    volleys: 3
-    volleyInterval: 0.8
-    bulletsPerVolley: 24
-    moveAmplitude: 1.2
-    movePeriod: 1.6
-    leadTime: 0.4
-    tailTime: 0.6
-  pattern5:
-    duration: 8
-    directions: 8
-    fireInterval: 0.0517
-    rotationSpeed: 47.52
+  patterns:
+  - {fileID: 11400000, guid: 70f22156089ad1648b4c9fb025b571b7, type: 2}
+  - {fileID: 11400000, guid: 72a105d8f02e9c6498d9c1c7a019dbf5, type: 2}
+  - {fileID: 11400000, guid: 1cbc9742ed09bef40b01808071d1b24b, type: 2}
+  - {fileID: 11400000, guid: ffedcad7bfff5f241bb45240ea4692c5, type: 2}
+  - {fileID: 11400000, guid: edf157af5eddf5441ab57f787a0b213a, type: 2}
+  - {fileID: 11400000, guid: 17454a56aaea2054fba9e8342670e0c1, type: 2}
   hitFlashInterval: 0.05
   deathFlashMaterial: {fileID: 2100000, guid: 0627c2de969117a4eae64a99e372e792, type: 2}
   deathFlashInterval: 0.05

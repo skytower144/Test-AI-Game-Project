@@ -48,7 +48,7 @@ namespace Chopper.EditorTools
         /// <summary>보스 대형 폭발(explosion-4) 이펙트의 표시 배율.</summary>
         private const float BossBlastScale = 1.8f;
 
-        /// <summary>적 총알 속도(유닛/초). 보스의 모든 패턴과 Hornet이 같은 속도를 쓴다.</summary>
+        /// <summary>적 총알 속도(유닛/초). 보스의 기본 패턴과 Hornet이 같은 속도를 쓴다.</summary>
         private const float EnemyBulletSpeed = 7.2f;
 
         /// <summary>기울이기 전 헬리콥터 이미지 위의 좌표(중심 원점, 유닛)를 기울어진 이미지 위의 좌표로 옮긴다.</summary>
@@ -351,7 +351,8 @@ namespace Chopper.EditorTools
             Set(boss, "boosters", new[] { boosterTop, boosterBottom });
             Set(boss, "hitColliders", new Collider2D[] { hull });
             Set(boss, "bulletPrefab", Prefab<Bullet>(PfEnemyBullet));
-            Set(boss, "bulletSpeed", EnemyBulletSpeed); // 모든 패턴 공통(4번 패턴 기준 속도)
+            // 행동 패턴: 패턴 에디터로 만든 패턴과 순서를 보존한다(없을 때만 기본 5개 패턴을 만든다)
+            Set(boss, "patterns", ResolveBossPatterns());
             Set(boss, "anchorViewport", new Vector2(0.8f, 0.5f));
 
             // 처치 연출(플레이어 사망 연출과 동일한 구성)

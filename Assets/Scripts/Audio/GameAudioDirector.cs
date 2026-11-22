@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Chopper
 {
@@ -28,12 +29,15 @@ namespace Chopper
         [SerializeField, Min(0f)] private float slowArrivalOverlap = 0.3f;
         [SerializeField, Min(0f)] private float bossEngineFadeIn = 0.4f;
         [SerializeField, Min(0f)] private float bossEngineFadeOut = 0.6f;
-        [SerializeField, Min(0f)] private float portalFadeOut = 0.35f;
-        [Tooltip("portal_idle 루프를 재생할 패턴 번호(0부터). 4 = 5번 패턴")]
-        [SerializeField] private int portalPatternIndex = 4;
+        [Tooltip("패턴에 지정된 반복 소리(패턴 에셋의 Loop Sound)가 켜질 때의 페이드 시간(초)")]
+        [SerializeField, Min(0f)] private float patternLoopFadeIn = 0.2f;
+        [Tooltip("패턴에 지정된 반복 소리가 꺼질 때의 페이드 시간(초)")]
+        [FormerlySerializedAs("portalFadeOut")]
+        [SerializeField, Min(0f)] private float patternLoopFadeOut = 0.35f;
 
         private bool playerDying;
         private float dyingTimer;
+        private SoundId patternLoop = SoundId.None;
 
         private void OnEnable()
         {
@@ -105,7 +109,7 @@ namespace Chopper
             playerDying = false;
             AudioManager.CancelDelayed(SoundId.BossSlowArrival);
             AudioManager.StopLoop(SoundId.BossEngine, bossEngineFadeOut);
-            AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
+            StopPatternLoop();
             AudioManager.SetLoopPitch(SoundId.Chopper, 1f);
         }
 
@@ -195,12 +199,20 @@ namespace Chopper
 
         private void OnBossSpawned(BossSpawnedEvent evt)
         {
-            AudioManager.Play(SoundId.BossArrival);
+            if (evt.instant)
+            {
+                // 등장 연출 없이 바로 나타난 경우(패턴 테스트): 등장음을 내지 않고, 예약돼 있던 등장음도 취소한다
+                AudioManager.CancelDelayed(SoundId.BossSlowArrival);
+            }
+            else
+            {
+                AudioManager.Play(SoundId.BossArrival);
 
-            // BossSlowArrival은 BossArrival이 끝나기 직전에 살짝 겹치며 이어지도록, BossArrival의 길이에 맞춰 늦춰 재생한다.
-            // (모습을 드러내는 연출의 시작 시점과는 무관하게 두 소리가 끊기지 않고 이어진다)
-            float delay = Mathf.Max(0f, AudioManager.GetDuration(SoundId.BossArrival) - slowArrivalOverlap);
-            AudioManager.Play(SoundId.BossSlowArrival, 1f, delay);
+                // BossSlowArrival은 BossArrival이 끝나기 직전에 살짝 겹치며 이어지도록, BossArrival의 길이에 맞춰 늦춰 재생한다.
+                // (모습을 드러내는 연출의 시작 시점과는 무관하게 두 소리가 끊기지 않고 이어진다)
+                float delay = Mathf.Max(0f, AudioManager.GetDuration(SoundId.BossArrival) - slowArrivalOverlap);
+                AudioManager.Play(SoundId.BossSlowArrival, 1f, delay);
+            }
 
             AudioManager.PlayLoop(SoundId.BossEngine, bossEngineFadeIn);
         }
@@ -210,21 +222,33 @@ namespace Chopper
             AudioManager.Play(SoundId.BossBullet);
         }
 
+        // 패턴 에셋에 반복 소리가 지정되어 있으면 그 패턴이 진행되는 동안 재생한다(예: portal_idle).
         private void OnBossPatternStarted(BossPatternStartedEvent evt)
         {
-            if (evt.patternIndex == portalPatternIndex) AudioManager.PlayLoop(SoundId.PortalIdle, 0.2f);
+            StopPatternLoop();
+
+            if (evt.pattern == null || evt.pattern.loopSound == SoundId.None) return;
+            patternLoop = evt.pattern.loopSound;
+            AudioManager.PlayLoop(patternLoop, patternLoopFadeIn);
         }
 
         private void OnBossPatternEnded(BossPatternEndedEvent evt)
         {
-            if (evt.patternIndex == portalPatternIndex) AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
+            StopPatternLoop();
+        }
+
+        private void StopPatternLoop()
+        {
+            if (patternLoop == SoundId.None) return;
+            AudioManager.StopLoop(patternLoop, patternLoopFadeOut);
+            patternLoop = SoundId.None;
         }
 
         private void OnBossDefeated(BossDefeatedEvent evt)
         {
             AudioManager.CancelDelayed(SoundId.BossSlowArrival);
             AudioManager.StopLoop(SoundId.BossEngine, bossEngineFadeOut);
-            AudioManager.StopLoop(SoundId.PortalIdle, portalFadeOut);
+            StopPatternLoop();
         }
 
         private void OnBossBigExplosion(BossBigExplosionEvent evt)
